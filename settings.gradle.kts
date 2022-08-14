@@ -10,4 +10,4 @@ gradleEnterprise {
     }
 }
 
-rootProject.name = "learning-scafi-alchemist"
+rootProject.name = "alchemist-boids"

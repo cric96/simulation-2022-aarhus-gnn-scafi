@@ -1,13 +1,22 @@
 [versions]
 alchemist = "24.1.7"
-
+upickle = "1.4.3"
+smile = "2.6.0"
+oslib = "0.8.1"
+ui = "5.0.0"
 [libraries]
 alchemist = { module = "it.unibo.alchemist:alchemist", version.ref = "alchemist" }
 alchemist-incarnation-protelis = { module = "it.unibo.alchemist:alchemist-incarnation-protelis", version.ref = "alchemist" }
 alchemist-swingui = { module = "it.unibo.alchemist:alchemist-swingui", version.ref = "alchemist" }
+alchemist-ui-tooling = { module = "it.unibo.alchemist:alchemist-ui-tooling", version.ref = "alchemist" }
 alchemist-incarnation-scafi = { module = "it.unibo.alchemist:alchemist-incarnation-scafi", version.ref = "alchemist"}
+tooling-gui = { module = "org.danilopianini:javalib", version.ref = "ui" }
+upickle = { module = "com.lihaoyi:upickle_2.13", version.ref = "upickle" }
+smile = { module = "com.github.haifengl:smile-scala_2.13", version.ref = "smile" }
+oslib = { module = "com.lihaoyi:os-lib_2.13", version.ref = "oslib" }
+
 [bundles]
-alchemist = ["alchemist", "alchemist-incarnation-scafi", "alchemist-swingui"]
+alchemist = ["alchemist", "alchemist-incarnation-scafi", "alchemist-swingui", "alchemist-ui-tooling", "tooling-gui"]
 
 [plugins]
 multiJvmTesting = "org.danilopianini.multi-jvm-test-plugin:0.4.9"

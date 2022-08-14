@@ -14,6 +14,10 @@ repositories {
 dependencies {
     // Check the catalog at gradle/libs.versions.gradle
     implementation(libs.bundles.alchemist)
+    // Scala deps
+    implementation(libs.upickle)
+    implementation(libs.smile)
+    implementation(libs.oslib)
 }
 
 multiJvm {

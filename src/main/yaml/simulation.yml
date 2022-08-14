@@ -1,0 +1,59 @@
+incarnation: scafi
+
+variables:
+  random: &random
+    min: 0
+    max: 5
+    step: 1
+    default: 2
+
+  range: &range
+    formula: 100
+    language: scala
+
+  file: &file
+    formula: >
+      s"boids/condensed-${random.toString.toDouble.toInt}"
+    language: scala
+
+_constants:
+  retentionTime: &retentionTime 5.0
+  layerMolecule: &layerMolecule 'density'
+
+seeds:
+  scenario: *random
+  simulation: *random
+
+layers:
+  - type: DensityMap
+    parameters: [40]
+    molecule: *layerMolecule
+environment:
+  type: Continuous2DEnvironment
+  parameters: []
+  global-programs:
+    - time-distribution: 0.5
+      type: DensityMapFromFile
+      parameters: [ *file, *layerMolecule ]
+
+network-model:
+  type: ConnectWithinDistance #*connectionType
+  parameters: [*range]
+
+_reactions:
+  - program: &program
+      - time-distribution: 1.0
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [it.unibo.scafi.examples.Main, *retentionTime]
+      - program: send
+
+deployments:
+  type: Grid
+  parameters: [0, 0, 1000, 1000, 50, 50, 25, 25]
+  programs:
+    - *program
+  contents:
+    - molecule: foo
+      concentration: 100
