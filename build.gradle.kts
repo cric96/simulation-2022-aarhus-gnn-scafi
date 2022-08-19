@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.upickle)
     implementation(libs.smile)
     implementation(libs.oslib)
+    implementation(libs.breezelib)
 }
 
 multiJvm {

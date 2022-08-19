@@ -4,6 +4,8 @@ upickle = "1.4.3"
 smile = "2.6.0"
 oslib = "0.8.1"
 ui = "5.0.0"
+breeze = "2.0.1-RC1"
+
 [libraries]
 alchemist = { module = "it.unibo.alchemist:alchemist", version.ref = "alchemist" }
 alchemist-incarnation-protelis = { module = "it.unibo.alchemist:alchemist-incarnation-protelis", version.ref = "alchemist" }
@@ -14,7 +16,7 @@ tooling-gui = { module = "org.danilopianini:javalib", version.ref = "ui" }
 upickle = { module = "com.lihaoyi:upickle_2.13", version.ref = "upickle" }
 smile = { module = "com.github.haifengl:smile-scala_2.13", version.ref = "smile" }
 oslib = { module = "com.lihaoyi:os-lib_2.13", version.ref = "oslib" }
-
+breezelib = { module = "org.scalanlp:breeze_2.13", version.ref = "breeze"}
 [bundles]
 alchemist = ["alchemist", "alchemist-incarnation-scafi", "alchemist-swingui", "alchemist-incarnation-protelis", "alchemist-ui-tooling", "tooling-gui"]
 
