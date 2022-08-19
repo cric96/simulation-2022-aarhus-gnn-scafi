@@ -16,7 +16,7 @@ smile = { module = "com.github.haifengl:smile-scala_2.13", version.ref = "smile"
 oslib = { module = "com.lihaoyi:os-lib_2.13", version.ref = "oslib" }
 
 [bundles]
-alchemist = ["alchemist", "alchemist-incarnation-scafi", "alchemist-swingui", "alchemist-ui-tooling", "tooling-gui"]
+alchemist = ["alchemist", "alchemist-incarnation-scafi", "alchemist-swingui", "alchemist-incarnation-protelis", "alchemist-ui-tooling", "tooling-gui"]
 
 [plugins]
 multiJvmTesting = "org.danilopianini.multi-jvm-test-plugin:0.4.9"

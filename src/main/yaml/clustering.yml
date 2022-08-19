@@ -1,0 +1,15 @@
+incarnation: scafi
+_reactions:
+  - program: &program
+      - time-distribution: 1.0
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [it.unibo.scafi.examples.Clustering, 5.0]
+      - program: send
+network-model: { type: ConnectWithinDistance, parameters: [0.5] }
+deployments:
+  - { type: GraphStreamDeployment, parameters: [300, -30, 0, 0.8, Lobster, [5, 15]], programs: *program }
+  - { type: GraphStreamDeployment, parameters: [300, 0, 0, 2, BananaTree, 10], programs: *program }
+  - { type: GraphStreamDeployment, parameters: [300, 30, 0, PreferentialAttachment], programs: *program }
+  - { type: GraphStreamDeployment, parameters: [300, 60, 0, RandomEuclideanGenerator, ], programs: *program }
