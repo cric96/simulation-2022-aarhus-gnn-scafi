@@ -4,7 +4,7 @@ upickle = "1.4.3"
 smile = "2.6.0"
 oslib = "0.8.1"
 ui = "5.0.0"
-breeze = "2.0.1-RC1"
+breeze = "2.0.1-RC2"
 
 [libraries]
 alchemist = { module = "it.unibo.alchemist:alchemist", version.ref = "alchemist" }
