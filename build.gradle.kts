@@ -19,6 +19,8 @@ dependencies {
     implementation(libs.smile)
     implementation(libs.oslib)
     implementation(libs.breezelib)
+    // Scalapy
+    implementation(libs.scalapy)
 }
 
 multiJvm {

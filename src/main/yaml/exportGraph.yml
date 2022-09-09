@@ -3,7 +3,7 @@ incarnation: scafi
 variables:
   random: &random
     min: 0
-    max: 5
+    max: 100
     step: 1
     default: 2
 
@@ -41,16 +41,14 @@ network-model:
   type: ConnectWithinDistance #*connectionType
   parameters: [*range]
 
-_reactions:
-  - program: &program
-      - time-distribution: 1
-        type: Event
-        actions:
-          - type: RunScafiProgram
-            parameters: [it.unibo.scafi.examples.Main, *retentionTime]
-      - program: send
 deployments:
   type: Grid
   parameters: [0, 0, 1000, 1000, 50, 50, 25, 25]
-  programs:
-    - *program
+
+export:
+  - type: GraphExporter
+    parameters: [ "data/raw", "evolution", 1 ]
+    data: [ ]
+terminate:
+  - type: AfterTime
+    parameters: 950
