@@ -20,7 +20,7 @@ dependencies {
     implementation(libs.oslib)
     implementation(libs.breezelib)
     // Scalapy
-    implementation(libs.scalapy)
+    implementation(libs.scalapy)// https://mvnrepository.com/artifact/org.scala-lang/scala-library
 }
 
 multiJvm {

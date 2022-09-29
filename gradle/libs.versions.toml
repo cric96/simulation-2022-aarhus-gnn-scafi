@@ -6,6 +6,7 @@ oslib = "0.8.1"
 ui = "5.0.0"
 breeze = "2.1.0"
 scalapy = "0.5.2+8-f74f8dfe"
+scrimage = "4.0.32"
 
 [libraries]
 alchemist = { module = "it.unibo.alchemist:alchemist", version.ref = "alchemist" }
@@ -19,6 +20,7 @@ smile = { module = "com.github.haifengl:smile-scala_2.13", version.ref = "smile"
 oslib = { module = "com.lihaoyi:os-lib_2.13", version.ref = "oslib" }
 breezelib = { module = "org.scalanlp:breeze_2.13", version.ref = "breeze" }
 scalapy = { module = "me.shadaj:scalapy-core_2.13", version.ref = "scalapy" }
+scrimage = { module = "com.sksamuel.scrimage:scrimage-scala_2.13", version.ref = "scrimage" }
 
 [bundles]
 alchemist = ["alchemist", "alchemist-incarnation-scafi", "alchemist-swingui", "alchemist-incarnation-protelis", "alchemist-ui-tooling", "tooling-gui"]

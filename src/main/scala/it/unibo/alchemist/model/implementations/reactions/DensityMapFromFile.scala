@@ -8,7 +8,12 @@ import java.util
 import scala.io.Source
 import upickle.default._
 
-class DensityMapFromFile[T, P <: Position[P]](val environment: Environment[T, P], val timeDistribution: TimeDistribution[T], val resource: String, layerMolecule: Molecule) extends GlobalReaction[T]{
+class DensityMapFromFile[T, P <: Position[P]](
+    val environment: Environment[T, P],
+    val timeDistribution: TimeDistribution[T],
+    val resource: String,
+    layerMolecule: Molecule
+) extends GlobalReaction[T] {
   // Internal representation to load the points
   private val resourceContent = Source.fromResource(resource)
   private var content = read[Seq[Array[Array[Double]]]](resourceContent.getLines().mkString)
@@ -31,7 +36,6 @@ class DensityMapFromFile[T, P <: Position[P]](val environment: Environment[T, P]
   override def getInboundDependencies: ListSet[_ <: Dependency] = ListSets.emptyListSet()
   override def getOutboundDependencies: ListSet[_ <: Dependency] = ListSets.emptyListSet()
 
-
   override def getTimeDistribution: TimeDistribution[T] = timeDistribution
 
   override def canExecute: Boolean = true // todo
@@ -40,7 +44,8 @@ class DensityMapFromFile[T, P <: Position[P]](val environment: Environment[T, P]
     val current = content.head
     content = content.tail
     layer.updateDensityMap(current)
-    timeDistribution.update(getTimeDistribution.getNextOccurence, true, 1.0, environment)
+    val image =
+      timeDistribution.update(getTimeDistribution.getNextOccurence, true, 1.0, environment)
   }
 
   override def initializationComplete(time: Time, environment: Environment[T, _]): Unit = {}
