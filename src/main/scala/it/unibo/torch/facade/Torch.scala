@@ -2,8 +2,9 @@ package it.unibo.torch.facade
 
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.readwrite.{Reader, Writer}
-import spire.ClassTag
 import me.shadaj.scalapy.py.SeqConverters
+
+import scala.reflect.ClassTag
 
 @py.native
 object TorchModule extends py.StaticModule("torch") {
