@@ -43,14 +43,35 @@ network-model:
 
 _reactions:
   - program: &program
-      - time-distribution: 1
+      - time-distribution:
+          type: DiracComb
+          parameters: [ 1.0 ]
         type: Event
         actions:
           - type: RunScafiProgram
             parameters: [it.unibo.scafi.examples.Main, *retentionTime]
       - program: send
+  - move: &move
+    - time-distribution: { type: ExponentialTime, parameters: [ 1 ] }
+      type: Event
+      actions: { type: MoveToTarget, parameters: [ destination, 100 ] }
 deployments:
   type: Grid
   parameters: [0, 0, 1000, 1000, 50, 50, 25, 25]
   programs:
     - *program
+    - *move
+
+export:
+  - type: CSVExporter
+    parameters:
+      exportPath: "export"
+      fileNameRoot: "simulation"
+      interval: 1.0
+    data:
+      - time
+      - type: CoverageExtractor
+
+terminate:
+  - type: AfterTime
+    parameters: 999

@@ -7,18 +7,11 @@ import it.unibo.alchemist.model.interfaces.{Environment, Node, Position2D}
 import org.danilopianini.lang.RangedInteger
 import org.danilopianini.view.ExportForGUI
 
-import java.awt.geom.{AffineTransform, Path2D}
+import java.awt.geom.{AffineTransform, Ellipse2D, Path2D}
 import java.awt.{BasicStroke, Color, Graphics2D}
 
-class AngleDrawer extends Effect {
-  @ExportForGUI(nameToExport = "Melecule")
-  private val molecule: String = "angle"
-  @ExportForGUI(nameToExport = "Size")
-  private val maxValueRanged: RangedInteger = new RangedInteger(10, 100, 20)
-  private def maxValue = maxValueRanged.getVal
-  @ExportForGUI(nameToExport = "Stroke")
-  private val stroke: RangedInteger = new RangedInteger(1, 10, 2)
-  private def strokeValue = stroke.getVal
+class CoverageDrawer extends Effect {
+
   override def getColorSummary: Color = Color.BLACK
 
   override def apply[T, P <: Position2D[P]](
@@ -28,20 +21,15 @@ class AngleDrawer extends Effect {
       wormhole: Wormhole2D[P]
   ): Unit = {
     val manager = new SimpleNodeManager[T](node)
-    val angle = manager.getOption[Double](molecule).getOrElse(0.0)
-    val direction = (math.cos(angle), math.sin(angle))
     val zoom = wormhole.getZoom
     val position = wormhole.getViewPoint(environment.getPosition(node))
     val (x, y) = (position.x, position.y)
-    g.setColor(Color.BLACK)
-    g.setStroke(new BasicStroke(strokeValue))
-    val path = new Path2D.Float()
-    path.moveTo(0, 0)
-    path.lineTo(math.cos(angle) * manager.get[Double]("intensity"), math.sin(angle) * manager.get[Double]("intensity"))
+    // Todo remove magic number pls
+    g.setColor(new Color(125, 125, 125, 125))
+    val shape = new Ellipse2D.Float(-20, -20, 40, 40)
     val transform = new AffineTransform
     transform.translate(x, y)
-    transform.scale(maxValue, maxValue)
     transform.scale(zoom, zoom)
-    g.draw(transform.createTransformedShape(path))
+    g.fill(transform.createTransformedShape(shape))
   }
 }
