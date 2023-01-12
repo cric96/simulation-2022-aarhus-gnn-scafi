@@ -10,4 +10,6 @@ trait Tensor extends py.Object {
   def apply(index: Int): Tensor = py.native
   @PyBracketAccess
   def update(index: Int, newValue: Tensor): Unit = py.native
+
+  def to(device: py.Any): Tensor = py.native
 }

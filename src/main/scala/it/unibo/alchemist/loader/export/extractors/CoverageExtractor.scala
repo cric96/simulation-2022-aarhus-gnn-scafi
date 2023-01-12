@@ -1,24 +1,18 @@
 package it.unibo.alchemist.loader.`export`.extractors
 
 import it.unibo.alchemist.loader.`export`.Extractor
-import it.unibo.alchemist.model.implementations.nodes.SimpleNodeManager
 import it.unibo.alchemist.model.interfaces
 import it.unibo.alchemist.model.interfaces.{Actionable, Environment, Node, Position}
 
-import java.awt.{Color, Graphics2D, Rectangle}
-import java.awt.geom.{Area, Ellipse2D, Path2D, PathIterator, Rectangle2D}
-import java.awt.image.BufferedImage
-import java.io.File
+import java.awt.geom._
 import java.util
-import javax.imageio.ImageIO
-import javax.swing.JFrame
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 class CoverageExtractor extends Extractor[Double] {
   private val size = 40 // todo move out!
+  private val bound = 1000 // todo move out!
   override def getColumnNames: util.List[String] = util.List.of("coverage")
-  val frame = new JFrame()
-  frame
+
   override def extractData[T](
       environment: Environment[T, _],
       actionable: Actionable[T],
@@ -27,8 +21,8 @@ class CoverageExtractor extends Extractor[Double] {
   ): util.Map[String, Double] = {
     val nodes = environment.getNodes.iterator().asScala.map(node => environment.typedPosition(node))
     val coordinates = nodes.map(position => (position.getCoordinate(0), position.getCoordinate(1)))
-    val shapes = coordinates.map { case (x, y) => new Ellipse2D.Double(x - 20, y - 20, 40, 40) }
-    val reference = new Rectangle2D.Double(0, 0, 1000, 1000)
+    val shapes = coordinates.map { case (x, y) => new Ellipse2D.Double(x - size / 2, y - size / 2, size, size) }
+    val reference = new Rectangle2D.Double(0, 0, bound, bound)
     val path = new Path2D.Double()
     val merged = shapes.foldLeft[Path2D.Double](path) { (acc, area) => acc.append(area, false); acc }
     val area = new Area(merged)

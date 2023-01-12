@@ -8,19 +8,21 @@ import me.shadaj.scalapy.py.{PyQuote, SeqConverters}
 import scala.util.{Success, Try}
 
 class ForecastPrediction(underlying: py.Dynamic) {
+  private val device = torch.device("cuda:0")
+  underlying.to(device)
   def predict(data: Data, memory: Option[Tensor] = None): (Double, Tensor) = {
-    val features = torch.tensor(data.features).reshape((data.features.size, 1))
+    val features = torch.tensor(data.features).reshape((data.features.size, 1)).to(device)
     val neighborhood = data.distances.zipWithIndex.map(_._2).map(_ + 1)
     val enteringLink = neighborhood.map(_ => 0)
     val exitingLink = neighborhood
     val allEnter = enteringLink ++ exitingLink
     val allExit = exitingLink ++ enteringLink
-    val tensorRepLinks = torch.tensor(Seq(allEnter.toPythonProxy, allExit.toPythonProxy))
+    val tensorRepLinks = torch.tensor(Seq(allEnter.toPythonProxy, allExit.toPythonProxy)).to(device)
     val allWeight = data.distances ++ data.distances
-    val weightTensorRep = torch.tensor(allWeight)
+    val weightTensorRep = torch.tensor(allWeight).to(device)
     val pyMemory = memory
       .map { memo =>
-        val adjust = torch.zeros(data.features.size, 32)
+        val adjust = torch.zeros(data.features.size, 32).to(device) // 32 is the hidden size?
         adjust(0) = memo(0)
         adjust
       }
@@ -43,7 +45,7 @@ object ForecastPrediction {
   val classes = modules.filter(df => py"issubclass($df, $baseModule)".as[Boolean] && inspect.isabstract(df).as[Boolean])
   val torch = TorchModule
 
-  val checkpointPath = "src/main/resources/epoch=53-step=324.ckpt"
+  val checkpointPath = "src/main/resources/epoch=103-step=312.ckpt"
   val loaded =
     modules.to(LazyList).map(module => Try(module.load_from_checkpoint(checkpointPath)))
   val module = loaded.collectFirst { case Success(data) => data }

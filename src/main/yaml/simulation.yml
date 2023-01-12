@@ -8,7 +8,7 @@ variables:
     default: 2
 
   range: &range
-    formula: 100
+    formula: 200
     language: scala
 
   file: &file
@@ -57,7 +57,7 @@ _reactions:
       actions: { type: MoveToTarget, parameters: [ destination, 100 ] }
 deployments:
   type: Grid
-  parameters: [0, 0, 1000, 1000, 50, 50, 25, 25]
+  parameters: [0, 0, 1000, 1000, 100, 100, 25, 25]
   programs:
     - *program
     - *move
@@ -71,6 +71,7 @@ export:
     data:
       - time
       - type: CoverageExtractor
+      - type: DensityExtractor
 
 terminate:
   - type: AfterTime
