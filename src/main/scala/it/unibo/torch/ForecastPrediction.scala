@@ -8,7 +8,7 @@ import me.shadaj.scalapy.py.{PyQuote, SeqConverters}
 import scala.util.{Success, Try}
 
 class ForecastPrediction(underlying: py.Dynamic) {
-  private val device = torch.device("cuda:0")
+  private val device = torch.device("cpu")
   underlying.to(device)
   def predict(data: Data, memory: Option[Tensor] = None): (Double, Tensor) = {
     val features = torch.tensor(data.features).reshape((data.features.size, 1)).to(device)

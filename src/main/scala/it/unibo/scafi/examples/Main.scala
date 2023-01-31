@@ -13,9 +13,12 @@ class Main
     with BlockG
     with BlockT
     with Gradients
+    with StateManagement
     with FieldUtils {
   override def main(): Double = {
     val normalizer = 100.0
+    val timer = roundCounter()
+    node.put("timer", timer)
     val result = senseEnvData[Double]("density") / normalizer
     val memory = rep(Queue.empty[(Double, P)]) { memory =>
       ((result, currentPosition()) +: memory).take(3)
@@ -25,19 +28,15 @@ class Main
     val features = neighbourhood.map(_._2._1)
     var (forecast, _) = rep((result, Option.empty[Tensor])) { case (old, memory) =>
       branch(neighbourhood.size > 1) {
-        val time = System.nanoTime()
         val (forecast, updateMemory) =
           ForecastPrediction.globalOracle.predict(Data(result +: features, weights), memory)
-        val endTime = System.nanoTime()
-        println((endTime - time) / 1000_000.0)
-
         (forecast, Option(updateMemory))
       } {
         (old, memory)
       }
     }
 
-    /*var (forecast, _) = (result, 0)*/
+    // var (forecast, _) = (result, 0)
     forecast = forecast * normalizer
     node.put("series", forecast)
     val elements = excludingSelf.reifyField(nbr(forecast), nbrVector()) // .filter(_._2._1 > result)
@@ -54,12 +53,11 @@ class Main
     node.put("dy", dy)
 
     val module = math.hypot(dx.getOrElse(0), dy.getOrElse(0))
-    // node.put("angle", atan2(direction.y, direction.x))
     node.put(
       "destination",
       alchemistEnvironment.makePosition(
-        currentPosition().x + dx.getOrElse(0.0) * module * 10,
-        currentPosition().y + dy.getOrElse(0.0) * module * 10
+        currentPosition().x + dx.getOrElse(0.0) * 10,
+        currentPosition().y + dy.getOrElse(0.0) * 10
       )
     )
     node.put("angle", math.atan2(-1 * dy.getOrElse(0.0), dx.getOrElse(0)))

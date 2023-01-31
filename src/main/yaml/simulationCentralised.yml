@@ -1,0 +1,64 @@
+incarnation: scafi
+
+variables:
+  random: &random
+    min: 0
+    max: 5
+    step: 1
+    default: 2
+
+  range: &range
+    formula: 200
+    language: scala
+
+  file: &file
+    formula: >
+      s"boids/condensed-${random.toString.toDouble.toInt}"
+    language: scala
+
+_constants:
+  retentionTime: &retentionTime 5.0
+  layerMolecule: &layerMolecule 'density'
+
+seeds:
+  scenario: *random
+  simulation: *random
+
+layers:
+  - type: DensityMap
+    parameters: [40]
+    molecule: *layerMolecule
+
+environment:
+  type: Continuous2DEnvironment
+  parameters: []
+  global-programs:
+    - time-distribution: 1
+      type: DensityMapFromFile
+      parameters: [ *file, *layerMolecule ]
+    - time-distribution: 1
+      type: GlobalMovement
+      parameters: [*layerMolecule]
+
+network-model:
+  type: ConnectWithinDistance #*connectionType
+  parameters: [*range]
+
+deployments:
+  type: Grid
+  parameters: [0, 0, 1000, 1000, 100, 100, 25, 25]
+
+export:
+  - type: CSVExporter
+    parameters:
+      exportPath: "export"
+      fileNameRoot: "simulation"
+      interval: 1.0
+    data:
+      - time
+      - type: CoverageExtractor
+      - type: DensityExtractor
+
+terminate:
+  - type: AfterTime
+    parameters: 999
