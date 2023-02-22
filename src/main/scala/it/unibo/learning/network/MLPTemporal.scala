@@ -7,7 +7,7 @@ import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.Any.from
 import me.shadaj.scalapy.py.SeqConverters
 
-class MLPTemporal(snapshots: Int, hiddenSize: Int, val actionSpace: List[Double]) extends NeuralNetworkRL {
+class MLPTemporal(snapshots: Int, hiddenSize: Int, val actionSpace: List[Any]) extends NeuralNetworkRL {
   override val underlying: py.Dynamic = DQN(snapshots, hiddenSize, actionSpace.size)
   override def encode(state: AgentState): py.Any = Historical.encodeHistory(state, snapshots)
 

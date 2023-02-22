@@ -6,7 +6,7 @@ import it.unibo.learning.network.torch._
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.{PyQuote, SeqConverters}
 
-class RNNRL(snapshots: Int, hiddenSize: Int, val actionSpace: List[Double]) extends NeuralNetworkRL {
+class RNNRL(snapshots: Int, hiddenSize: Int, val actionSpace: List[Any]) extends NeuralNetworkRL {
   override val underlying: py.Dynamic = RDQN(1, hiddenSize, actionSpace.size, snapshots)
   override def encode(state: AgentState): py.Any = Historical.encodeHistory(state, snapshots)
 

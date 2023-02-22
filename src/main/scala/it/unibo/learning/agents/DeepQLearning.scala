@@ -21,8 +21,8 @@ class DeepQLearning(
     torch.device(if (deviceName != "cpu" && torch.cuda.is_available().as[Boolean]) deviceName else "cpu")
   var updates = 0
   private var random: Random = new Random()
-  private var targetNetwork = referenceNet.cloneNetwork
-  private var policyNetwork = referenceNet
+  private val targetNetwork = referenceNet.cloneNetwork
+  private val policyNetwork = referenceNet
   targetNetwork.underlying.to(device)
   policyNetwork.underlying.to(device)
   private val optimizer = optim.RMSprop(policyNetwork.underlying.parameters(), alpha)
@@ -43,9 +43,8 @@ class DeepQLearning(
     implicit val session: PythonMemoryManager.Session = PythonMemoryManager.session()
     // context
     import session._
-    targetNetwork.underlying.train()
-    policyNetwork.underlying.train()
-
+    // targetNetwork.underlying.train()
+    // policyNetwork.underlying.train()
     val states = batch.map(_.stateT).map(referenceNet.encode)
     val action = batch.map(_.actionT).map(action => action).toPythonCopy
     val rewards = torch.tensor(batch.map(_.rewardTPlus).toPythonCopy, device = device).record()
@@ -65,7 +64,7 @@ class DeepQLearning(
         )
         .record()
     val nextStateValues = py.`with`(torch.no_grad()) { _ =>
-      policyNetwork
+      targetNetwork
         .forward(referenceNet.encodeBatch(nextStates, device).record())
         .record()
         .max(1)
@@ -81,15 +80,13 @@ class DeepQLearning(
     writer.add_scalar("Loss", loss.detach().item().as[Double], updates)
     torch.nn.utils.clip_grad_value_(policyNetwork.underlying.parameters(), 1)
     optimizer.step()
-    policyNetwork.underlying.zero_grad(set_to_none = true)
-    targetNetwork.underlying.zero_grad(set_to_none = true)
     session.clear()
     updates += 1
-    if (updates % copyEach == 0) {
+    if (updates % 100 == 0) {
       targetNetwork.underlying.load_state_dict(policyNetwork.underlying.state_dict())
     }
-    targetNetwork.underlying.eval()
-    policyNetwork.underlying.eval()
+    // targetNetwork.underlying.eval()
+    // policyNetwork.underlying.eval()
   }
 
   override def injectRandom(random: Random): Unit = this.random = random

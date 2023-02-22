@@ -11,7 +11,7 @@ import me.shadaj.scalapy.py.SeqConverters
 trait NeuralNetworkRL {
   val underlying: py.Dynamic
   def forward(input: py.Dynamic)(implicit session: PythonMemoryManager.Session): py.Dynamic = underlying(input)
-  def actionSpace: List[Double]
+  def actionSpace: List[Any]
   def emptyContextual: Contextual
   def cloneNetwork: NeuralNetworkRL
   def encode(state: AgentState): py.Any
@@ -52,7 +52,6 @@ object NeuralNetworkRL {
         .map(_(state.me))
         .map(_.data)
         .replaceInfinite()
-        .reverse
         .to(LazyList)
       val fill: LazyList[Double] = LazyList.continually(0.0)
       (states #::: fill).take(snapshots).toPythonCopy
@@ -72,7 +71,9 @@ object NeuralNetworkRL {
     def encodeSpatial(state: AgentState, neigh: Int, considerAction: Boolean): py.Any = {
       val states: LazyList[Double] = {
         val currentSnapshot = state.neighborhoodSensing.head.toList.sortBy(_._2.distance).take(neigh)
-        val data = currentSnapshot.map(_._2.data).replaceInfinite() to LazyList
+        val data = currentSnapshot
+          .flatMap { case (id, data) => List(data.data, data.distanceVector._1, data.distanceVector._2) }
+          .replaceInfinite() to LazyList
         if (considerAction) {
           val actions = currentSnapshot.map(_._2.oldAction)
           data.zip(actions).flatMap { case (data, action) => List(data, action.toDouble) }
@@ -81,7 +82,7 @@ object NeuralNetworkRL {
         }
       }
       val fill: LazyList[Double] = LazyList.continually(0.0)
-      (states #::: fill).take(neigh * (if (considerAction) 2 else 1)).toPythonCopy
+      (states #::: fill).take(neigh * (if (considerAction) 4 else 3)).toPythonCopy
     }
   }
 }

@@ -1,7 +1,6 @@
 package it.unibo.learning.agents
 
 import it.unibo.alchemist.model.implementations.reactions.GlobalLearner
-import it.unibo.alchemist.model.implementations.timedistributions.reactions.CentralAgent
 import it.unibo.learning.abstractions.ReplayBuffer.Experience
 import it.unibo.learning.abstractions.{AgentState, Contextual}
 

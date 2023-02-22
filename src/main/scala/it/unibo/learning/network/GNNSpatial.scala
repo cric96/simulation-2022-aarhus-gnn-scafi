@@ -7,8 +7,7 @@ import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.Any.from
 import me.shadaj.scalapy.py.{PyQuote, SeqConverters}
 
-class GNNSpatial(hiddenSize: Int, val actionSpace: List[Double], considerAction: Boolean = false)
-    extends NeuralNetworkRL {
+class GNNSpatial(hiddenSize: Int, val actionSpace: List[Any], considerAction: Boolean = false) extends NeuralNetworkRL {
   val True = torch.tensor(Seq(true).toPythonCopy)
 
   val dataSpaceMultiplier = if (considerAction) 2 else 1
@@ -18,7 +17,7 @@ class GNNSpatial(hiddenSize: Int, val actionSpace: List[Double], considerAction:
   override def forward(input: py.Dynamic)(implicit session: PythonMemoryManager.Session): py.Dynamic = {
     import session._
     val converted = input.as[Seq[py.Dynamic]].map(_.record())
-    underlying(normalize(converted(0)).record(), converted(1)).record().bracketAccess(converted(2).record())
+    underlying(normalize(converted.head).record(), converted(1)).record().bracketAccess(converted(2).record())
   }
 
   override def encode(state: AgentState): py.Any = {

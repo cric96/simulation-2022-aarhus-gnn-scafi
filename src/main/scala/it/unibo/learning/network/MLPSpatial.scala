@@ -6,9 +6,9 @@ import it.unibo.learning.network.torch._
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.SeqConverters
 
-class MLPSpatial(neigh: Int, hiddenSize: Int, val actionSpace: List[Double], considerAction: Boolean = false)
+class MLPSpatial(neigh: Int, hiddenSize: Int, val actionSpace: List[Any], considerAction: Boolean = false)
     extends NeuralNetworkRL {
-  val dataSpaceMultiplier = if (considerAction) 2 else 1
+  val dataSpaceMultiplier = if (considerAction) 4 else 3
   override val underlying: py.Dynamic = DQN(neigh * dataSpaceMultiplier, hiddenSize, actionSpace.size)
 
   override def encode(state: AgentState): py.Any = Spatial.encodeSpatial(state, neigh, considerAction)
