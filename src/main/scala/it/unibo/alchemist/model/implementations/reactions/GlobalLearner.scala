@@ -31,7 +31,7 @@ class GlobalLearner[T, P <: Position[P]](
 
   private val historyMolecule = "history"
   private val buffer = new ReplayBuffer(bufferSize, randomScala)
-  lazy val densityMap = environment.getLayer(layerMolecule).get().asInstanceOf[DensityMap[P]]
+  lazy val densityMap = Option(environment.getLayer(layerMolecule).orElse(null)).map(_.asInstanceOf[DensityMap[P]])
 
   private var decayable = List.empty[(String, DecayReference[Any])]
 
@@ -125,19 +125,20 @@ class GlobalLearner[T, P <: Position[P]](
   def computeRewards(): Map[Int, Double] = {
     agents.map { node =>
       val neighborhood = environment.getNeighborhood(node).iterator().asScala.toList // ++ List(node)
-      /*val densityNeighborhood = neighborhood.map(environment.getPosition).map(densityMap.getValue)
+      val densityNeighborhood =
+        neighborhood.map(environment.getPosition).map(p => densityMap.map(_.getValue(p)).getOrElse(0.0))
       val probabilityFromNeighborhood = densityNeighborhood.map(_ + 0.001)
       val fixed = probabilityFromNeighborhood.map(d => d / probabilityFromNeighborhood.sum)
       val entropy = fixed.map(p => -p * math.log(p)).sum
-      node.getId -> entropy
-       */
+      node.getId -> densityMap.map(_.getValue(environment.getPosition(node))).getOrElse(0.0)
+    /*
       val info = neighborhood
         .map(neigh => computeInformationFromNeighbour(node, neigh)._2)
         // compute distance from the vector
         .map { case NeighborInfo(_, (dx, dy), _) => math.sqrt(dx * dx + dy * dy) }
         .maxOption
-        .getOrElse(1000.0)
-      node.getId -> -info
+        .getOrElse(400.0)
+      node.getId -> -info*/
     }.toMap
   }
 
@@ -146,7 +147,7 @@ class GlobalLearner[T, P <: Position[P]](
     val neighPosition = environment.getPosition(neighbor)
     val deltaVector = myPosition.minus(neighPosition.getCoordinates).getCoordinates
     neighbor.getId -> NeighborInfo(
-      densityMap.getValue(neighPosition),
+      densityMap.map(_.getValue(neighPosition)).getOrElse(0.0),
       (deltaVector(0) / 300, deltaVector(1) / 300),
       -1
     ) // currently I don't consider old action
