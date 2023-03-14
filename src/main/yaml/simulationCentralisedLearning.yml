@@ -1,39 +1,39 @@
 incarnation: scafi
 
 variables:
-  width: &width { formula: 1000.0, language: scala }
-  spacing: &spacing { formula: 100.0, language: scala }
-  randomness: &randomness { formula: 25.0, language: scala }
+  width: &width { formula: 1000.0, language: application/x-scala }
+  spacing: &spacing { formula: 100.0, language: application/x-scala }
+  randomness: &randomness { formula: 25.0, language: application/x-scala }
 
   random: &random
     min: 0
-    max: 5
+    max: 0
     step: 1
-    default: 2
+    default: 0
 
   range: &range
     formula: 400
-    language: scala
+    language: application/x-scala
 
   file: &file
     formula: >
       s"boids/condensed-${random.toString.toDouble.toInt}"
-    language: scala
+    language: application/x-scala
 
   environmentBox: &environmentBox
     formula: |
       import it.unibo.scripting._;
       it.unibo.learning.Box(width.as[Double], spacing.as[Double], randomness.as[Double])
-    language: scala
+    language: application/x-scala
 
-  batchSize: &batchSize { formula: 64, language: scala }
-  episodeLength: &episodeLength { formula: 100, language: scala }
-  bufferSize: &bufferSize { formula: 100000, language: scala }
-  windowSize: &windowSize { formula: 5, language: scala }
+  batchSize: &batchSize { formula: 64, language: application/x-scala }
+  episodeLength: &episodeLength { formula: 100, language: application/x-scala }
+  bufferSize: &bufferSize { formula: 100000, language: application/x-scala }
+  windowSize: &windowSize { formula: 5, language: application/x-scala }
   actionSpaceEvaluated: &actionSpaceEvaluated
     #formula: "it.unibo.learning.abstractions.ActionSpace.create(5, List(0, 1, 1.5, 2.0, 2.5, 3.0))"
     formula: "it.unibo.learning.abstractions.ActionSpace.create(20, List(0, 1))"
-    language: scala
+    language: application/x-scala
 
   neuralNet: &neuralNet
     formula: |
@@ -47,7 +47,7 @@ variables:
         neigh = 5,
         actionSpace = actionSpaceEvaluated.as[List[Any]]
       )
-    language: scala
+    language: application/x-scala
 
   learner: &learner
     formula: |
@@ -62,7 +62,7 @@ variables:
         copyEach = 10,
         referenceNet = neuralNet.as[NeuralNetworkRL]
       )
-    language: scala
+    language: application/x-scala
 _constants:
   layerMolecule: &layerMolecule 'density'
 
