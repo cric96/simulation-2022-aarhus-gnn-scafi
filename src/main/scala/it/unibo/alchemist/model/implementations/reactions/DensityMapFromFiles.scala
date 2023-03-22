@@ -27,7 +27,7 @@ class DensityMapFromFiles[T, P <: Position[P]](
     ticks += 1
     if (ticks == changeEach) {
       ticks = 0
-      episodes = (episodes + 1) % howMany
+      // episodes = (episodes + 1) % howMany
     }
   }
 

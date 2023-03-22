@@ -82,7 +82,7 @@ class DeepQLearning(
     optimizer.step()
     session.clear()
     updates += 1
-    if (updates % 100 == 0) {
+    if (updates % copyEach == 0) {
       targetNetwork.underlying.load_state_dict(policyNetwork.underlying.state_dict())
     }
     // targetNetwork.underlying.eval()

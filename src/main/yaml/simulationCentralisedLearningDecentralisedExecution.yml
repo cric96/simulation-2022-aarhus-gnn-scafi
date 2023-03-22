@@ -26,7 +26,7 @@ variables:
       it.unibo.learning.Box(width.as[Double], spacing.as[Double], randomness.as[Double])
     language: application/x-scala
 
-  batchSize: &batchSize { formula: 64, language: application/x-scala }
+  batchSize: &batchSize { formula: 32, language: application/x-scala }
   episodeLength: &episodeLength { formula: 100, language: application/x-scala }
   bufferSize: &bufferSize { formula: 100000, language: application/x-scala }
   windowSize: &windowSize { formula: 5, language: application/x-scala }
@@ -43,7 +43,7 @@ variables:
       import it.unibo.learning.network._;
       import it.unibo.scripting._;
       new MLPSpatial(
-        hiddenSize = 64, 
+        hiddenSize = 128, 
         neigh = 5,
         actionSpace = actionSpaceEvaluated.as[List[Any]]
       )
@@ -57,9 +57,9 @@ variables:
       import it.unibo.scripting._;
       new DeepQLearning(
         epsilon = DecayReference.exponentialDecay(0.9, 0.1).bounded(0.01),
-        alpha = 0.0004,
-        gamma = 0.99,
-        copyEach = 10,
+        alpha = 0.001,
+        gamma = 0.90,
+        copyEach = 1000,
         referenceNet = neuralNet.as[NeuralNetworkRL]
       )
     language: application/x-scala
@@ -79,21 +79,37 @@ environment:
   type: Continuous2DEnvironment
   parameters: []
   global-programs:
-    - time-distribution: 1
+    - time-distribution:
+        type: DiracComb
+        parameters: [ 0.0, 1.0 ]
       type: DensityMapFromFiles
       parameters: [ "boids", "condensed", 100, *episodeLength, *layerMolecule ]
-    - time-distribution: 1
-      type: GlobalLearner
+    - time-distribution:
+        type: DiracComb
+        parameters: [ 0.2, 1.0 ]
+      type: GlobalLearnerDecentralisedAgent
       parameters: [*layerMolecule, *learner, *bufferSize, *windowSize, *batchSize, *actionSpaceEvaluated, *episodeLength, *environmentBox]
 
 network-model:
   type: ClosestN #*connectionType
   parameters: [5]
 
+_reactions:
+  - program: &program
+      - time-distribution:
+          type: DiracComb
+          parameters: [ 0.1, 1.0 ]
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [it.unibo.scafi.Explorer, 1.1 ]
+      - program: send
+
 deployments:
   type: Grid
   parameters: [0, 0, *width, *width, *spacing, *spacing, *randomness, *randomness]
-
+  programs:
+    - *program
 export:
   - type: CSVExporter
     parameters:
