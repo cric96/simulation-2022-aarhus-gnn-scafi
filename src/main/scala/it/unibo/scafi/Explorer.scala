@@ -25,7 +25,7 @@ class Explorer
 
   def computeState: AgentState = {
     val neighborInfo = includingSelf
-      .reifyField(nbr(senseEnvData[Double]("density"), nbrVector()))
+      .reifyField(nbr(senseEnvData[Double]("density")), nbrVector())
       .view
       .mapValues { case (density, distance) => NeighborInfo(density, (distance.x, distance.y), -1) }
       .toMap

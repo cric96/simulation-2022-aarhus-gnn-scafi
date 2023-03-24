@@ -56,7 +56,7 @@ variables:
       import it.unibo.learning.network.NeuralNetworkRL;
       import it.unibo.scripting._;
       new DeepQLearning(
-        epsilon = DecayReference.exponentialDecay(0.05, 0.1).bounded(0.01),
+        epsilon = DecayReference.exponentialDecay(0.9, 0.05).bounded(0.01),
         alpha = 0.001,
         gamma = 0.90,
         copyEach = 1000,
