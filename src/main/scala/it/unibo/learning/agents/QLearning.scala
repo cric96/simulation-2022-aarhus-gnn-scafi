@@ -1,6 +1,6 @@
 package it.unibo.learning.agents
 
-import it.unibo.alchemist.model.implementations.reactions.GlobalLearner
+import it.unibo.alchemist.model.implementations.reactions.{AbstractGlobalLearner, GlobalLearner}
 import it.unibo.learning.abstractions.{AgentState, Contextual, DecayReference, ReplayBuffer}
 import it.unibo.util.TemporalInfo
 
@@ -45,6 +45,6 @@ class QLearning(
 
   override def injectRandom(random: Random): Unit = this.random = random
 
-  override def injectCentralAgent(agent: GlobalLearner[_, _]): Unit =
+  override def injectCentralAgent(agent: AbstractGlobalLearner): Unit =
     agent.attachDecayable("epsilon" -> epsilon, "alpha" -> alpha)
 }

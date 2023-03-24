@@ -4,7 +4,7 @@ variables:
   width: &width { formula: 1000.0, language: application/x-scala }
   spacing: &spacing { formula: 100.0, language: application/x-scala }
   randomness: &randomness { formula: 25.0, language: application/x-scala }
-
+  learningUpdate: &frequency { formula: 10 }
   random: &random
     min: 0
     max: 0
@@ -56,7 +56,7 @@ variables:
       import it.unibo.learning.network.NeuralNetworkRL;
       import it.unibo.scripting._;
       new DeepQLearning(
-        epsilon = DecayReference.exponentialDecay(0.9, 0.1).bounded(0.01),
+        epsilon = DecayReference.exponentialDecay(0.05, 0.1).bounded(0.01),
         alpha = 0.001,
         gamma = 0.90,
         copyEach = 1000,
@@ -81,14 +81,14 @@ environment:
   global-programs:
     - time-distribution:
         type: DiracComb
-        parameters: [ 0.0, 1.0 ]
+        parameters: [ 0.0, 0.5 ]
       type: DensityMapFromFiles
       parameters: [ "boids", "condensed", 100, *episodeLength, *layerMolecule ]
     - time-distribution:
         type: DiracComb
         parameters: [ 0.2, 1.0 ]
       type: GlobalLearnerDecentralisedAgent
-      parameters: [*layerMolecule, *learner, *bufferSize, *windowSize, *batchSize, *actionSpaceEvaluated, *episodeLength, *environmentBox]
+      parameters: [*layerMolecule, *learner, *bufferSize, *windowSize, *batchSize, *actionSpaceEvaluated, *episodeLength, *environmentBox, *frequency]
 
 network-model:
   type: ClosestN #*connectionType
@@ -104,7 +104,6 @@ _reactions:
           - type: RunScafiProgram
             parameters: [it.unibo.scafi.Explorer, 1.1 ]
       - program: send
-
 deployments:
   type: Grid
   parameters: [0, 0, *width, *width, *spacing, *spacing, *randomness, *randomness]

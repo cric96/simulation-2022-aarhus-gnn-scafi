@@ -1,6 +1,6 @@
 package it.unibo.learning.agents
 
-import it.unibo.alchemist.model.implementations.reactions.GlobalLearner
+import it.unibo.alchemist.model.implementations.reactions.{AbstractGlobalLearner, GlobalLearner}
 import it.unibo.learning.abstractions.{AgentState, Contextual, DecayReference, ReplayBuffer}
 import it.unibo.learning.network.NeuralNetworkRL
 import it.unibo.learning.network.torch._
@@ -91,5 +91,5 @@ class DeepQLearning(
 
   override def injectRandom(random: Random): Unit = this.random = random
 
-  override def injectCentralAgent(agent: GlobalLearner[_, _]): Unit = agent.attachDecayable("epsilon" -> epsilon)
+  override def injectCentralAgent(agent: AbstractGlobalLearner): Unit = agent.attachDecayable("epsilon" -> epsilon)
 }

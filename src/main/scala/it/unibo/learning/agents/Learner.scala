@@ -1,6 +1,6 @@
 package it.unibo.learning.agents
 
-import it.unibo.alchemist.model.implementations.reactions.GlobalLearner
+import it.unibo.alchemist.model.implementations.reactions.{AbstractGlobalLearner, GlobalLearner}
 import it.unibo.learning.abstractions.ReplayBuffer.Experience
 import it.unibo.learning.abstractions.{AgentState, Contextual}
 
@@ -12,5 +12,5 @@ trait Learner {
   def load(where: String): (AgentState, (Int, Contextual)) // load policy stored
   def update(batch: Seq[Experience]): Unit // update the internal state following the experience computed
   def injectRandom(random: Random): Unit
-  def injectCentralAgent(agent: GlobalLearner[_, _]): Unit
+  def injectCentralAgent(agent: AbstractGlobalLearner): Unit
 }

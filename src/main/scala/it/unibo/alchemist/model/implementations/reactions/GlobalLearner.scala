@@ -26,16 +26,13 @@ class GlobalLearner[T, P <: Position[P]](
     actionSpace: ActionSpace.Space,
     episodeLength: Int,
     box: Box
-) extends AbstractGlobalReaction[T, P](environment, timeDistribution) {
+) extends AbstractGlobalReaction[T, P](environment, timeDistribution)
+    with AbstractGlobalLearner {
   private val randomScala = new ScafiIncarnationForAlchemist.AlchemistRandomWrapper(random)
 
   private val historyMolecule = "history"
   private val buffer = new ReplayBuffer(bufferSize, randomScala)
   lazy val densityMap = Option(environment.getLayer(layerMolecule).orElse(null)).map(_.asInstanceOf[DensityMap[P]])
-
-  private var decayable = List.empty[(String, DecayReference[Any])]
-
-  def attachDecayable(decay: (String, DecayReference[Any])*): Unit = decayable = (decay.toList) ::: decayable
 
   learner.injectCentralAgent(this)
 

@@ -1,5 +1,6 @@
 package it.unibo.alchemist.model.implementations.reactions
 
+import it.unibo.alchemist.loader.`export`.extractors.DensityExtractor
 import it.unibo.alchemist.loader.deployments.Grid
 import it.unibo.alchemist.model.implementations.actions.RunScafiProgram
 import it.unibo.alchemist.model.implementations.molecules.SimpleMolecule
@@ -25,16 +26,17 @@ class GlobalLearnerDecentralisedAgent[T, P <: Position[P]](
     batchSize: Int,
     actionSpace: ActionSpace.Space,
     episodeLength: Int,
-    box: Box
-) extends AbstractGlobalReaction[T, P](environment, timeDistribution) {
+    box: Box,
+    learningUpdate: Int
+) extends AbstractGlobalReaction[T, P](environment, timeDistribution)
+    with AbstractGlobalLearner {
   private val randomScala = new ScafiIncarnationForAlchemist.AlchemistRandomWrapper(random)
   private val buffer = new ReplayBuffer(bufferSize, randomScala)
   private var actionMemory: Seq[(Int, Contextual)] = Seq.empty
   private var stateMemory: Seq[AgentState] = Seq.empty
 
-  private var decayable = List.empty[(String, DecayReference[Any])]
-
-  def attachDecayable(decay: (String, DecayReference[Any])*): Unit = decayable = (decay.toList) ::: decayable
+  private val extractor = new DensityExtractor()
+  learner.injectCentralAgent(this)
 
   override protected def executeBeforeUpdateDistribution(): Unit = if (environment.getSimulation.getTime.toDouble > 1) {
     val currentTime = environment.getSimulation.getTime.toDouble
@@ -47,6 +49,9 @@ class GlobalLearnerDecentralisedAgent[T, P <: Position[P]](
     performAction(toPerform)
     if ((currentTime.toInt % episodeLength) == 0) {
       decayable.foreach(_._2.update())
+      decayable.foreach { case (name, reference) =>
+        writer.add_scalar(name, reference.value.toString.toDouble, environment.getSimulation.getTime.toDouble.toInt)
+      }
       val newPosition = new Grid(
         environment,
         random,
@@ -73,8 +78,9 @@ class GlobalLearnerDecentralisedAgent[T, P <: Position[P]](
   def improvePolicy(states: Seq[AgentState]): Unit = {
     if (stateMemory.nonEmpty) {
       var totalReward = 0.0
+      val global = extractor.extractData(environment, this, environment.getSimulation.getTime, 0)
       stateMemory.zip(actionMemory).zip(states).foreach { case ((previousState, action), newState) =>
-        val reward = rewardFunction(previousState, newState, action)
+        val reward = rewardFunction(previousState, newState, action, global.get("density"))
         totalReward += reward
         buffer.put(previousState, action._1, reward, newState)
       }
@@ -84,12 +90,17 @@ class GlobalLearnerDecentralisedAgent[T, P <: Position[P]](
     }
   }
 
-  def rewardFunction(previousState: AgentState, currentState: AgentState, action: (Int, Contextual)): Double = {
+  def rewardFunction(
+      previousState: AgentState,
+      currentState: AgentState,
+      action: (Int, Contextual),
+      collectiveReward: Double
+  ): Double = {
     // regret
-    // val bestNode = currentState.neighborhoodSensing.head.maxBy(_._2.data)
+    val bestNode = currentState.neighborhoodSensing.head.maxBy(_._2.data)
     val mySelf = currentState.neighborhoodSensing.head(currentState.me)
     // -(bestNode._2.data - mySelf.data)
-    mySelf.data
+    collectiveReward
   }
 
   def resetNode(position: P, node: Node[T]): Unit = {
