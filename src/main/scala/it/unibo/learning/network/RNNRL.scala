@@ -32,4 +32,5 @@ class RNNRL(snapshots: Int, hiddenSize: Int, val actionSpace: List[Any]) extends
     result
   }
 
+  override def policyBatch(device: py.Any): Seq[AgentState] => Seq[(Int, Contextual)] = ???
 }

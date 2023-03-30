@@ -47,4 +47,6 @@ class QLearning(
 
   override def injectCentralAgent(agent: AbstractGlobalLearner): Unit =
     agent.attachDecayable("epsilon" -> epsilon, "alpha" -> alpha)
+
+  override def policyBatch: Seq[AgentState] => Seq[(Int, Contextual)] = ???
 }

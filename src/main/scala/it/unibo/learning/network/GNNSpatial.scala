@@ -90,4 +90,6 @@ class GNNSpatial(hiddenSize: Int, val actionSpace: List[Any], considerAction: Bo
     val neighborhoodIndexPython = neighborhoodIndex.map(_.toPythonCopy).toPythonCopy
     neighborhoodIndexPython.as[py.Dynamic]
   }
+
+  override def policyBatch(device: py.Any): Seq[AgentState] => Seq[(Int, Contextual)] = ???
 }

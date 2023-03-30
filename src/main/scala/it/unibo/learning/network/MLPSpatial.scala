@@ -30,4 +30,7 @@ class MLPSpatial(neigh: Int, hiddenSize: Int, val actionSpace: List[Any], consid
     input.del()
     result
   }
+
+  override def policyBatch(device: py.Any): Seq[AgentState] => Seq[(Int, Contextual)] =
+    NeuralNetworkRL.policyFromNetworkBatch(this, Seq(1, neigh * dataSpaceMultiplier), device)
 }

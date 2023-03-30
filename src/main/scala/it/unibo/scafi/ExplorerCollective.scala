@@ -7,7 +7,7 @@ import it.unibo.learning.abstractions.{AgentState, Contextual}
 
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 
-class Explorer
+class ExplorerCollective
     extends AggregateProgram
     with StandardSensors
     with ScafiAlchemistSupport
@@ -20,7 +20,7 @@ class Explorer
   override def main(): Any = {
     val state = computeState
     node.put("state", state)
-    node.put("action", policy(state))
+    // node.put("action", policy(state))
   }
 
   def computeState: AgentState = {

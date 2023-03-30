@@ -35,6 +35,14 @@ class DeepQLearning(
       (random.shuffle(policyNetwork.actionSpace.indices.toList).head, policyNetwork.emptyContextual)
     } else behaviouralPolicy(state)
 
+  override def policyBatch: Seq[AgentState] => Seq[(Int, Contextual)] = state => {
+    val actions = policyNetwork.policyBatch(device)(state)
+    actions.map { case (action, context) =>
+      if (random.nextDouble() < epsilon) {
+        (random.shuffle(policyNetwork.actionSpace.indices.toList).head, policyNetwork.emptyContextual)
+      } else (action, context)
+    }
+  }
   override def store(where: String): Unit = {}
 
   override def load(where: String): (AgentState, (Int, Contextual)) = null
@@ -47,7 +55,9 @@ class DeepQLearning(
     // policyNetwork.underlying.train()
     val states = batch.map(_.stateT).map(referenceNet.encode)
     val action = batch.map(_.actionT).map(action => action).toPythonCopy
-    val rewards = torch.tensor(batch.map(_.rewardTPlus).toPythonCopy, device = device).record()
+    val rewards = torch.nn.functional
+      .normalize(torch.tensor(batch.map(_.rewardTPlus).toPythonCopy, device = device).record(), dim = 0)
+      .record()
     val nextStates = batch.map(_.stateTPlus).map(referenceNet.encode)
     val inputBatch = referenceNet.encodeBatch(states, device).record()
     val stateActionValue =

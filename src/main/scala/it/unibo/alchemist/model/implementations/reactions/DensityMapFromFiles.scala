@@ -24,7 +24,7 @@ class DensityMapFromFiles[T, P <: Position[P]](
 
   override protected def executeBeforeUpdateDistribution(): Unit = {
     layer.updateDensityMap(contents(episodes)(ticks))
-    ticks += 1
+    // ticks += 1
     if (ticks == changeEach) {
       ticks = 0
       // episodes = (episodes + 1) % howMany

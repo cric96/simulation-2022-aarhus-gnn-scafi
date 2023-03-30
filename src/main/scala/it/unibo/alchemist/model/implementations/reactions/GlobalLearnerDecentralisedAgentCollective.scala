@@ -1,21 +1,20 @@
 package it.unibo.alchemist.model.implementations.reactions
 
-import it.unibo.alchemist.loader.`export`.extractors.{CoverageExtractor, DensityExtractor}
 import it.unibo.alchemist.loader.deployments.Grid
 import it.unibo.alchemist.model.implementations.actions.RunScafiProgram
 import it.unibo.alchemist.model.implementations.molecules.SimpleMolecule
 import it.unibo.alchemist.model.implementations.nodes.SimpleNodeManager
-import it.unibo.alchemist.model.interfaces.{Environment, Molecule, Node, Position, TimeDistribution}
+import it.unibo.alchemist.model.interfaces._
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist
 import it.unibo.learning.Box
-import it.unibo.learning.abstractions.{ActionSpace, AgentState, Contextual, DecayReference, ReplayBuffer}
+import it.unibo.learning.abstractions.{ActionSpace, AgentState, Contextual, ReplayBuffer}
 import it.unibo.learning.agents.Learner
 import it.unibo.learning.network.torch.writer
 import org.apache.commons.math3.random.RandomGenerator
 
 import scala.jdk.CollectionConverters.IterableHasAsScala
 
-class GlobalLearnerDecentralisedAgent[T, P <: Position[P]](
+class GlobalLearnerDecentralisedAgentCollective[T, P <: Position[P]](
     environment: Environment[T, P],
     timeDistribution: TimeDistribution[T],
     random: RandomGenerator,
@@ -41,7 +40,8 @@ class GlobalLearnerDecentralisedAgent[T, P <: Position[P]](
   override protected def executeBeforeUpdateDistribution(): Unit = if (environment.getSimulation.getTime.toDouble > 1) {
     val currentTime = environment.getSimulation.getTime.toDouble
     val currentStates = states
-    val currentActions = actions
+
+    val currentActions = learner.policyBatch(states)
     improvePolicy(currentStates)
     actionMemory = currentActions
     stateMemory = currentStates
@@ -122,7 +122,6 @@ class GlobalLearnerDecentralisedAgent[T, P <: Position[P]](
       .foreach(_.resetNeighborhood())
     val manager = new SimpleNodeManager[T](node)
     manager.remove("state")
-    manager.remove("action")
     environment.moveNodeToPosition(node, position)
   }
 

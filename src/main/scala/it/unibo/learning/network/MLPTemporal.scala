@@ -28,4 +28,6 @@ class MLPTemporal(snapshots: Int, hiddenSize: Int, val actionSpace: List[Any]) e
     input.del()
     result
   }
+
+  override def policyBatch(device: py.Any): Seq[AgentState] => Seq[(Int, Contextual)] = ???
 }

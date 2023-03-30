@@ -6,17 +6,19 @@ import it.unibo.alchemist.model.implementations.nodes.SimpleNodeManager
 import it.unibo.alchemist.model.interfaces.{Environment, Node, Position2D}
 import org.danilopianini.lang.RangedInteger
 import org.danilopianini.view.ExportForGUI
-
 import java.awt.geom.{AffineTransform, Path2D}
 import java.awt.{BasicStroke, Color, Graphics2D}
 
+// Todo move in alchemist
 class AngleDrawer extends Effect {
-  @ExportForGUI(nameToExport = "Melecule")
+  @ExportForGUI(nameToExport = "Angle molecule")
   private val molecule: String = "angle"
-  @ExportForGUI(nameToExport = "Size")
-  private val maxValueRanged: RangedInteger = new RangedInteger(10, 100, 20)
+  @ExportForGUI(nameToExport = "Intensity molecule")
+  private val intensity: String = "intensity"
+  @ExportForGUI(nameToExport = "Unitary length")
+  private val maxValueRanged: RangedInteger = new RangedInteger(1, 100, 20)
   private def maxValue = maxValueRanged.getVal
-  @ExportForGUI(nameToExport = "Stroke")
+  @ExportForGUI(nameToExport = "Stroke width")
   private val stroke: RangedInteger = new RangedInteger(1, 10, 2)
   private def strokeValue = stroke.getVal
   override def getColorSummary: Color = Color.BLACK
@@ -29,15 +31,15 @@ class AngleDrawer extends Effect {
   ): Unit = {
     val manager = new SimpleNodeManager[T](node)
     val angle = manager.getOption[Double](molecule).getOrElse(0.0)
-    val direction = (math.cos(angle), math.sin(angle))
+    val intensityValue = manager.getOption[Double](intensity).getOrElse(1.0)
     val zoom = wormhole.getZoom
     val position = wormhole.getViewPoint(environment.getPosition(node))
     val (x, y) = (position.x, position.y)
-    g.setColor(Color.BLACK)
+    g.setColor(getColorSummary)
     g.setStroke(new BasicStroke(strokeValue))
     val path = new Path2D.Float()
     path.moveTo(0, 0)
-    path.lineTo(math.cos(angle) * manager.get[Double]("intensity"), math.sin(angle) * manager.get[Double]("intensity"))
+    path.lineTo(math.cos(angle) * intensityValue, math.sin(angle) * intensityValue)
     val transform = new AffineTransform
     transform.translate(x, y)
     transform.scale(maxValue, maxValue)

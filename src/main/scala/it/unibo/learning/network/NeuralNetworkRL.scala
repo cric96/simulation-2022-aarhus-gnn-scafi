@@ -17,6 +17,7 @@ trait NeuralNetworkRL {
   def encode(state: AgentState): py.Any
   def encodeBatch(seq: Seq[py.Any], device: py.Any)(implicit session: PythonMemoryManager.Session): py.Dynamic
   def policy(device: py.Any): (AgentState) => (Int, Contextual)
+  def policyBatch(device: py.Any): Seq[AgentState] => Seq[(Int, Contextual)]
   def normalize(input: py.Dynamic): py.Dynamic
 }
 
@@ -42,6 +43,42 @@ object NeuralNetworkRL {
         val index = elements.index(max).as[Int]
         session.clear()
         (index, ())
+      }
+    }
+
+  def policyFromNetworkBatch(
+      nn: NeuralNetworkRL,
+      inputShape: Seq[Int],
+      device: py.Any
+  ): Seq[AgentState] => Seq[(Int, Contextual)] =
+    state => {
+      implicit val session = PythonMemoryManager.session()
+      val states = state.map(nn.encode)
+      // context
+      import session._
+      val totalShape = state.size +: inputShape
+      val netInput = nn.encodeBatch(states, device)
+      py.`with`(torch.no_grad()) { _ =>
+        val tensor = torch
+          .tensor(netInput)
+          .record()
+          .applyDynamic("view")(totalShape.map(_.as[py.Any]): _*)
+          .record()
+          .to(device)
+        val netOutput = nn.underlying(tensor).record()
+        val max = netOutput
+          .max(2)
+          .record()
+          .bracketAccess(1)
+          .record()
+        val index = max.tolist().as[Seq[Seq[Int]]].map(_.head)
+        // println(states.size)
+
+        // println(index.size)
+        // println(max)
+        // println(netOutput)
+        session.clear()
+        index.map((_, ()))
       }
     }
 
