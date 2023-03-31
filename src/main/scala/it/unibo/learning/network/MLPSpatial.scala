@@ -6,31 +6,16 @@ import it.unibo.learning.network.torch._
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.SeqConverters
 
-class MLPSpatial(neigh: Int, hiddenSize: Int, val actionSpace: List[Any], considerAction: Boolean = false)
+class MLPSpatial(hiddenSize: Int, val actionSpace: List[Any], val encoder: NeuralNetworkEncoder = new SpatialEncoder(5))
     extends NeuralNetworkRL {
-  val dataSpaceMultiplier = if (considerAction) 4 else 3
-  override val underlying: py.Dynamic = DQN(neigh * dataSpaceMultiplier, hiddenSize, actionSpace.size)
+  override val underlying: py.Dynamic = DQN(this.encoder.shape.reverse.head, hiddenSize, actionSpace.size)
 
-  override def encode(state: AgentState): py.Any = Spatial.encodeSpatial(state, neigh, considerAction)
+  override def policy(device: py.Any): (AgentState) => Int =
+    NeuralNetworkRL.policyFromNetwork(this, this.encoder.shape, device)
 
-  override def encodeBatch(seq: Seq[py.Any], device: py.Any)(implicit
-      session: PythonMemoryManager.Session
-  ): py.Dynamic =
-    normalize(torch.tensor(seq.toPythonCopy, device = device))
+  override def cloneNetwork: NeuralNetworkRL = new MLPSpatial(hiddenSize, actionSpace, encoder)
 
-  override def policy(device: py.Any): (AgentState) => (Int, Contextual) =
-    NeuralNetworkRL.policyFromNetwork(this, Seq(1, neigh * dataSpaceMultiplier), device)
+  override def policyBatch(device: py.Any): Seq[AgentState] => Seq[Int] =
+    NeuralNetworkRL.policyFromNetworkBatch(this, encoder.shape, device)
 
-  override def cloneNetwork: NeuralNetworkRL = new MLPSpatial(neigh, hiddenSize, actionSpace, considerAction)
-
-  override def emptyContextual: Contextual = ()
-
-  override def normalize(input: py.Dynamic): py.Dynamic = {
-    val result = torch.nn.functional.normalize(input)
-    input.del()
-    result
-  }
-
-  override def policyBatch(device: py.Any): Seq[AgentState] => Seq[(Int, Contextual)] =
-    NeuralNetworkRL.policyFromNetworkBatch(this, Seq(1, neigh * dataSpaceMultiplier), device)
 }

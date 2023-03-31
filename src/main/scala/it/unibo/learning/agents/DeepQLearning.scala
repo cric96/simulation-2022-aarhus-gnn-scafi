@@ -1,7 +1,7 @@
 package it.unibo.learning.agents
 
-import it.unibo.alchemist.model.implementations.reactions.{AbstractGlobalLearner, GlobalLearner}
-import it.unibo.learning.abstractions.{AgentState, Contextual, DecayReference, ReplayBuffer}
+import it.unibo.alchemist.model.implementations.reactions.AbstractGlobalLearner
+import it.unibo.learning.abstractions.{AgentState, DecayReference, ReplayBuffer}
 import it.unibo.learning.network.NeuralNetworkRL
 import it.unibo.learning.network.torch._
 import me.shadaj.scalapy.py
@@ -30,22 +30,22 @@ class DeepQLearning(
   targetNetwork.underlying.eval()
   policyNetwork.underlying.eval()
 
-  override def policy: AgentState => (Int, Contextual) = state =>
+  override def policy: AgentState => Int = state =>
     if (random.nextDouble() < epsilon) {
-      (random.shuffle(policyNetwork.actionSpace.indices.toList).head, policyNetwork.emptyContextual)
+      (random.shuffle(policyNetwork.actionSpace.indices.toList).head)
     } else behaviouralPolicy(state)
 
-  override def policyBatch: Seq[AgentState] => Seq[(Int, Contextual)] = state => {
+  override def policyBatch: Seq[AgentState] => Seq[Int] = state => {
     val actions = policyNetwork.policyBatch(device)(state)
-    actions.map { case (action, context) =>
+    actions.map { case (action) =>
       if (random.nextDouble() < epsilon) {
-        (random.shuffle(policyNetwork.actionSpace.indices.toList).head, policyNetwork.emptyContextual)
-      } else (action, context)
+        (random.shuffle(policyNetwork.actionSpace.indices.toList).head)
+      } else action
     }
   }
   override def store(where: String): Unit = {}
 
-  override def load(where: String): (AgentState, (Int, Contextual)) = null
+  override def load(where: String): AgentState => Int = ???
 
   override def update(batch: Seq[ReplayBuffer.Experience]): Unit = {
     implicit val session: PythonMemoryManager.Session = PythonMemoryManager.session()
@@ -53,13 +53,13 @@ class DeepQLearning(
     import session._
     // targetNetwork.underlying.train()
     // policyNetwork.underlying.train()
-    val states = batch.map(_.stateT).map(referenceNet.encode)
+    val states = batch.map(_.stateT).map(referenceNet.encoder.encode)
     val action = batch.map(_.actionT).map(action => action).toPythonCopy
     val rewards = torch.nn.functional
       .normalize(torch.tensor(batch.map(_.rewardTPlus).toPythonCopy, device = device).record(), dim = 0)
       .record()
-    val nextStates = batch.map(_.stateTPlus).map(referenceNet.encode)
-    val inputBatch = referenceNet.encodeBatch(states, device).record()
+    val nextStates = batch.map(_.stateTPlus).map(referenceNet.encoder.encode)
+    val inputBatch = referenceNet.encoder.encodeBatch(states, device).record()
     val stateActionValue =
       policyNetwork
         .forward(inputBatch)
@@ -75,7 +75,7 @@ class DeepQLearning(
         .record()
     val nextStateValues = py.`with`(torch.no_grad()) { _ =>
       targetNetwork
-        .forward(referenceNet.encodeBatch(nextStates, device).record())
+        .forward(referenceNet.encoder.encodeBatch(nextStates, device).record())
         .record()
         .max(1)
         .record()

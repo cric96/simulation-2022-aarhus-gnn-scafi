@@ -1,14 +1,13 @@
 package it.unibo.alchemist.model.implementations.reactions
 
-import it.unibo.alchemist.loader.`export`.extractors.{CoverageExtractor, DensityExtractor}
 import it.unibo.alchemist.loader.deployments.Grid
 import it.unibo.alchemist.model.implementations.actions.RunScafiProgram
 import it.unibo.alchemist.model.implementations.molecules.SimpleMolecule
 import it.unibo.alchemist.model.implementations.nodes.SimpleNodeManager
-import it.unibo.alchemist.model.interfaces.{Environment, Molecule, Node, Position, TimeDistribution}
+import it.unibo.alchemist.model.interfaces._
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist
 import it.unibo.learning.Box
-import it.unibo.learning.abstractions.{ActionSpace, AgentState, Contextual, DecayReference, ReplayBuffer}
+import it.unibo.learning.abstractions.{ActionSpace, AgentState, Contextual, ReplayBuffer}
 import it.unibo.learning.agents.Learner
 import it.unibo.learning.network.torch.writer
 import org.apache.commons.math3.random.RandomGenerator
@@ -99,19 +98,10 @@ class GlobalLearnerDecentralisedAgent[T, P <: Position[P]](
       collectiveReward: Double
   ): Double = {
     // regret
-    val bestNode = currentState.neighborhoodSensing.head.maxBy(_._2.data)
     val mySelf = currentState.neighborhoodSensing.head(currentState.me)
-    val previous = previousState.neighborhoodSensing.head(previousState.me)
     // -(bestNode._2.data - mySelf.data)ll
-    // collectiveReward
-    val allPhenomena = currentState.neighborhoodSensing.flatten.map(_._2.data + 0.001)
-    val sumPhenomena = allPhenomena.sum
-    val probability = allPhenomena.map(_ / sumPhenomena)
-    val entropy = probability.map(p => -p * math.log(p)).sum
-    // mySelf.data
-    -entropy
-    // collectiveReward
-    // mySelf.data
+    if (mySelf.data > 0) { 0 }
+    else { -1 }
   }
 
   def resetNode(position: P, node: Node[T]): Unit = {

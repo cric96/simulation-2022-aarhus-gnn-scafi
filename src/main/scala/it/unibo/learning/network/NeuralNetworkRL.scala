@@ -2,7 +2,6 @@ package it.unibo.learning.network
 
 import it.unibo.learning.abstractions.{AgentState, Contextual}
 import it.unibo.learning.network.torch.{PythonMemoryManager, torch}
-import it.unibo.util.TemporalInfo
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.Any.from
 import me.shadaj.scalapy.py.SeqConverters
@@ -12,20 +11,17 @@ trait NeuralNetworkRL {
   val underlying: py.Dynamic
   def forward(input: py.Dynamic)(implicit session: PythonMemoryManager.Session): py.Dynamic = underlying(input)
   def actionSpace: List[Any]
-  def emptyContextual: Contextual
   def cloneNetwork: NeuralNetworkRL
-  def encode(state: AgentState): py.Any
-  def encodeBatch(seq: Seq[py.Any], device: py.Any)(implicit session: PythonMemoryManager.Session): py.Dynamic
-  def policy(device: py.Any): (AgentState) => (Int, Contextual)
-  def policyBatch(device: py.Any): Seq[AgentState] => Seq[(Int, Contextual)]
-  def normalize(input: py.Dynamic): py.Dynamic
+  def policy(device: py.Any): (AgentState) => Int
+  def policyBatch(device: py.Any): Seq[AgentState] => Seq[Int]
+  def encoder: NeuralNetworkEncoder
 }
 
 object NeuralNetworkRL {
 
-  def policyFromNetwork(nn: NeuralNetworkRL, inputShape: Seq[Int], device: py.Any): (AgentState) => (Int, Contextual) =
+  def policyFromNetwork(nn: NeuralNetworkRL, inputShape: Seq[Int], device: py.Any): (AgentState) => Int =
     state => {
-      val netInput = nn.encode(state)
+      val netInput = nn.encoder.encode(state)
       val session = PythonMemoryManager.session()
       // context
       import session._
@@ -36,13 +32,13 @@ object NeuralNetworkRL {
           .applyDynamic("view")(inputShape.map(_.as[py.Any]): _*)
           .record()
           .to(device)
-        val normalized = nn.normalize(tensor).record()
+        val normalized = nn.encoder.normalize(tensor).record()
         val netOutput = nn.underlying(normalized).record()
         val elements = netOutput.tolist().record().bracketAccess(0).record()
         val max = py.Dynamic.global.max(elements)
         val index = elements.index(max).as[Int]
         session.clear()
-        (index, ())
+        index
       }
     }
 
@@ -50,14 +46,14 @@ object NeuralNetworkRL {
       nn: NeuralNetworkRL,
       inputShape: Seq[Int],
       device: py.Any
-  ): Seq[AgentState] => Seq[(Int, Contextual)] =
+  ): Seq[AgentState] => Seq[Int] =
     state => {
       implicit val session = PythonMemoryManager.session()
-      val states = state.map(nn.encode)
+      val states = state.map(nn.encoder.encode)
       // context
       import session._
       val totalShape = state.size +: inputShape
-      val netInput = nn.encodeBatch(states, device)
+      val netInput = nn.encoder.encodeBatch(states, device)
       py.`with`(torch.no_grad()) { _ =>
         val tensor = torch
           .tensor(netInput)
@@ -72,28 +68,11 @@ object NeuralNetworkRL {
           .bracketAccess(1)
           .record()
         val index = max.tolist().as[Seq[Seq[Int]]].map(_.head)
-        // println(states.size)
-
-        // println(index.size)
-        // println(max)
-        // println(netOutput)
         session.clear()
-        index.map((_, ()))
+        index
       }
     }
 
-  object Historical {
-    def encodeHistory(state: AgentState, snapshots: Int): py.Any = {
-      // TemporalInfo.computeDeltaTrend(me.map(_.data))
-      val states: LazyList[Double] = state.neighborhoodSensing
-        .map(_(state.me))
-        .map(_.data)
-        .replaceInfinite()
-        .to(LazyList)
-      val fill: LazyList[Double] = LazyList.continually(0.0)
-      (states #::: fill).take(snapshots).toPythonCopy
-    }
-  }
   object Spatial {
     def encodeSpatialUnbounded(state: AgentState, considerAction: Boolean): py.Any = {
       val currentSnapshot = state.neighborhoodSensing.head.toList.sortBy(_._2.distance)

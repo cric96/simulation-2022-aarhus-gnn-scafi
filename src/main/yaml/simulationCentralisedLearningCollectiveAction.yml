@@ -1,9 +1,9 @@
 incarnation: scafi
 
 variables:
-  width: &width { formula: 1000.0, language: application/x-scala }
-  spacing: &spacing { formula: 200.0, language: application/x-scala }
-  randomness: &randomness { formula: 25.0, language: application/x-scala }
+  width: &width { formula: 1000.0 }
+  spacing: &spacing { formula: 200.0 }
+  randomness: &randomness { formula: 25.0 }
   learningUpdate: &frequency { formula: 10 }
   random: &random
     min: 0
@@ -13,12 +13,6 @@ variables:
 
   range: &range
     formula: 400
-    language: application/x-scala
-
-  file: &file
-    formula: >
-      s"boids/condensed-${random.toString.toDouble.toInt}"
-    language: application/x-scala
 
   environmentBox: &environmentBox
     formula: |
@@ -26,7 +20,7 @@ variables:
       it.unibo.learning.Box(width.as[Double], spacing.as[Double], randomness.as[Double])
     language: application/x-scala
 
-  batchSize: &batchSize { formula: 512, language: application/x-scala }
+  batchSize: &batchSize { formula: 64, language: application/x-scala }
   episodeLength: &episodeLength { formula: 100, language: application/x-scala }
   bufferSize: &bufferSize { formula: 100000, language: application/x-scala }
   windowSize: &windowSize { formula: 5, language: application/x-scala }
@@ -43,8 +37,7 @@ variables:
       import it.unibo.learning.network._;
       import it.unibo.scripting._;
       new MLPSpatial(
-        hiddenSize = 128, 
-        neigh = 5,
+        hiddenSize = 128,
         actionSpace = actionSpaceEvaluated.as[List[Any]]
       )
     language: application/x-scala
@@ -56,9 +49,9 @@ variables:
       import it.unibo.learning.network.NeuralNetworkRL;
       import it.unibo.scripting._;
       new DeepQLearning(
-        epsilon = DecayReference.exponentialDecay(0.01, 0.1).bounded(0.00),
-        alpha = 0.001,
-        gamma = 0.99,
+        epsilon = DecayReference.exponentialDecay(0.9, 0.1).bounded(0.02),
+        alpha = 0.004,
+        gamma = 0.90,
         copyEach = 100,
         referenceNet = neuralNet.as[NeuralNetworkRL]
       )
@@ -71,19 +64,14 @@ seeds:
   simulation: *random
 
 layers:
-  - type: DensityMap
-    parameters: [40]
-    molecule: *layerMolecule
+  - type: CircleLayer
+    parameters: [500, 500, 200, 1]
+    molecule: info
 
 environment:
   type: Continuous2DEnvironment
   parameters: []
   global-programs:
-    - time-distribution:
-        type: DiracComb
-        parameters: [ 0.0, 1 ]
-      type: DensityMapFromFiles
-      parameters: [ "boids", "condensed", 100, *episodeLength, *layerMolecule ]
     - time-distribution:
         type: DiracComb
         parameters: [ 0.2, 1.0 ]
@@ -118,4 +106,3 @@ export:
     data:
       - time
       - type: CoverageExtractor
-      #- type: DensityExtractor

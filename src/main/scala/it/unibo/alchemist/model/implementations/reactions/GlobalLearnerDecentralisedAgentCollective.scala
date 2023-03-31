@@ -31,7 +31,7 @@ class GlobalLearnerDecentralisedAgentCollective[T, P <: Position[P]](
     with AbstractGlobalLearner {
   private val randomScala = new ScafiIncarnationForAlchemist.AlchemistRandomWrapper(random)
   private val buffer = new ReplayBuffer(bufferSize, randomScala)
-  private var actionMemory: Seq[(Int, Contextual)] = Seq.empty
+  private var actionMemory: Seq[Int] = Seq.empty
   private var stateMemory: Seq[AgentState] = Seq.empty
 
   // private val extractor = new DensityExtractor()
@@ -84,7 +84,7 @@ class GlobalLearnerDecentralisedAgentCollective[T, P <: Position[P]](
       stateMemory.zip(actionMemory).zip(states).foreach { case ((previousState, action), newState) =>
         val reward = rewardFunction(previousState, newState, action, global("coverage"))
         totalReward += reward
-        buffer.put(previousState, action._1, reward, newState)
+        buffer.put(previousState, action, reward, newState)
       }
 
       writer.add_scalar("Reward", totalReward, environment.getSimulation.getTime.toDouble.toInt)
@@ -95,7 +95,7 @@ class GlobalLearnerDecentralisedAgentCollective[T, P <: Position[P]](
   def rewardFunction(
       previousState: AgentState,
       currentState: AgentState,
-      action: (Int, Contextual),
+      action: Int,
       collectiveReward: Double
   ): Double = {
     // regret
@@ -125,8 +125,8 @@ class GlobalLearnerDecentralisedAgentCollective[T, P <: Position[P]](
     environment.moveNodeToPosition(node, position)
   }
 
-  def performAction(actionsIndex: Map[Int, (Int, Contextual)]): Unit = {
-    val actions = actionsIndex.map { case (id, (index, _)) => id -> actionSpace(index) }
+  def performAction(actionsIndex: Map[Int, Int]): Unit = {
+    val actions = actionsIndex.map { case (id, index) => id -> actionSpace(index) }
     actions
       .map { case (id, (angle, module)) =>
         (environment.getNodeByID(id), (angle, module))
