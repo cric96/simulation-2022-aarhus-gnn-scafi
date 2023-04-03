@@ -1,10 +1,11 @@
 package it.unibo.learning.network
 
-import it.unibo.learning.abstractions.{AgentState, Contextual}
+import it.unibo.learning.abstractions.AgentState
 import it.unibo.learning.network.torch.{PythonMemoryManager, torch}
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.Any.from
 import me.shadaj.scalapy.py.SeqConverters
+import AgentState._
 
 /** An NN used in the context of RL */
 trait NeuralNetworkRL {
@@ -75,10 +76,10 @@ object NeuralNetworkRL {
 
   object Spatial {
     def encodeSpatialUnbounded(state: AgentState, considerAction: Boolean): py.Any = {
-      val currentSnapshot = state.neighborhoodSensing.head.toList.sortBy(_._2.distance)
-      val data = currentSnapshot.map(_._2.data).replaceInfinite() to LazyList
+      val currentSnapshot = state.neighborhoodSensing.head.toList.sortBy(_._2.distance[Double])
+      val data = currentSnapshot.map(_._2.data[Double]).replaceInfinite() to LazyList
       if (considerAction) {
-        val actions = currentSnapshot.map(_._2.oldAction)
+        val actions = currentSnapshot.map(_._2.oldAction[Int])
         data.zip(actions).map { case (data, action) => List(data, action.toDouble).toPythonCopy }.toPythonCopy
       } else {
         data.toPythonCopy
@@ -86,12 +87,14 @@ object NeuralNetworkRL {
     }
     def encodeSpatial(state: AgentState, neigh: Int, considerAction: Boolean): py.Any = {
       val states: LazyList[Double] = {
-        val currentSnapshot = state.neighborhoodSensing.head.toList.sortBy(_._2.distance).take(neigh)
+        val currentSnapshot = state.neighborhoodSensing.head.toList.sortBy(_._2.distance[Double]).take(neigh)
         val data = currentSnapshot
-          .flatMap { case (id, data) => List(data.data, data.distanceVector._1, data.distanceVector._2) }
+          .flatMap { case (id, data) =>
+            List(data.data, data.distanceVector[(Double, Double)]._1, data.distanceVector[(Double, Double)]._2)
+          }
           .replaceInfinite() to LazyList
         if (considerAction) {
-          val actions = currentSnapshot.map(_._2.oldAction)
+          val actions = currentSnapshot.map(_._2.oldAction[Int])
           data.zip(actions).flatMap { case (data, action) => List(data, action.toDouble) }
         } else {
           data

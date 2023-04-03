@@ -32,7 +32,7 @@ object TorchModule extends py.StaticModule("torch") {
   def load(path: String): py.Any =
     self.load(path)
   def tensor[N: ClassTag](elements: Seq[N])(implicit reader: Reader[N], writer: Writer[N]): Tensor =
-    self.tensor(elements.toPythonProxy).as[Tensor]
+    self.tensor(elements.toPythonCopy).as[Tensor]
 
   def nn: py.Dynamic = py.native
 

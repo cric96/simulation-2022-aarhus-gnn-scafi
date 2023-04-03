@@ -7,7 +7,14 @@ import it.unibo.alchemist.model.implementations.nodes.SimpleNodeManager
 import it.unibo.alchemist.model.interfaces._
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist
 import it.unibo.learning.Box
-import it.unibo.learning.abstractions.{ActionSpace, AgentState, Contextual, ReplayBuffer}
+import it.unibo.learning.abstractions.{
+  ActionSpace,
+  AgentState,
+  ArrayReplayBuffer,
+  Contextual,
+  QueueReplayBuffer,
+  ReplayBuffer
+}
 import it.unibo.learning.agents.Learner
 import it.unibo.learning.network.torch.writer
 import org.apache.commons.math3.random.RandomGenerator
@@ -30,7 +37,7 @@ class GlobalLearnerDecentralisedAgentCollective[T, P <: Position[P]](
 ) extends AbstractGlobalReaction[T, P](environment, timeDistribution)
     with AbstractGlobalLearner {
   private val randomScala = new ScafiIncarnationForAlchemist.AlchemistRandomWrapper(random)
-  private val buffer = new ReplayBuffer(bufferSize, randomScala)
+  private val buffer = new ArrayReplayBuffer(bufferSize, randomScala)
   private var actionMemory: Seq[Int] = Seq.empty
   private var stateMemory: Seq[AgentState] = Seq.empty
 
@@ -78,17 +85,15 @@ class GlobalLearnerDecentralisedAgentCollective[T, P <: Position[P]](
   def improvePolicy(states: Seq[AgentState]): Unit = {
     if (stateMemory.nonEmpty) {
       var totalReward = 0.0
-      val global = Map(
-        "coverage" -> 0.0
-      ) // extractor.extractData(environment, this, environment.getSimulation.getTime, 0)
       stateMemory.zip(actionMemory).zip(states).foreach { case ((previousState, action), newState) =>
-        val reward = rewardFunction(previousState, newState, action, global("coverage"))
+        val reward = rewardFunction(previousState, newState, action, 0.0)
         totalReward += reward
         buffer.put(previousState, action, reward, newState)
       }
 
       writer.add_scalar("Reward", totalReward, environment.getSimulation.getTime.toDouble.toInt)
-      learner.update(buffer.sample(batchSize))
+      val sample = buffer.sample(batchSize)
+      if (sample.nonEmpty) learner.update(sample)
     }
   }
 
@@ -99,19 +104,15 @@ class GlobalLearnerDecentralisedAgentCollective[T, P <: Position[P]](
       collectiveReward: Double
   ): Double = {
     // regret
-    val bestNode = currentState.neighborhoodSensing.head.maxBy(_._2.data)
     val mySelf = currentState.neighborhoodSensing.head(currentState.me)
-    val previous = previousState.neighborhoodSensing.head(previousState.me)
-    // -(bestNode._2.data - mySelf.data)ll
-    // collectiveReward
-    val allPhenomena = currentState.neighborhoodSensing.flatten.map(_._2.data + 0.001)
-    val sumPhenomena = allPhenomena.sum
-    val probability = allPhenomena.map(_ / sumPhenomena)
-    val entropy = probability.map(p => -p * math.log(p)).sum
-    // mySelf.data
-    -entropy
-    // collectiveReward
-    // mySelf.data
+    val center = environment.makePosition(500, 500) // just for now
+    val myPosition = environment.getPosition(environment.getNodeByID(currentState.me))
+    val distanceReward = 1 - ((center.distanceTo(myPosition)) / 500)
+    val connectionReward = if (currentState.neighborhoodSensing.size < 2) 0 else 1
+    distanceReward + connectionReward
+    /*if (mySelf.data[Double] > 0) { 0 }
+    else if (currentState.neighborhoodSensing.size < 2) { -10 }
+    else { -1 }*/
   }
 
   def resetNode(position: P, node: Node[T]): Unit = {

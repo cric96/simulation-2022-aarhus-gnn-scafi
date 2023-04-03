@@ -17,7 +17,7 @@ class ForecastPrediction(underlying: py.Dynamic) {
     val exitingLink = neighborhood
     val allEnter = enteringLink ++ exitingLink
     val allExit = exitingLink ++ enteringLink
-    val tensorRepLinks = torch.tensor(Seq(allEnter.toPythonProxy, allExit.toPythonProxy)).to(device)
+    val tensorRepLinks = torch.tensor(Seq(allEnter.toPythonCopy, allExit.toPythonCopy)).to(device)
     val allWeight = data.distances ++ data.distances
     val weightTensorRep = torch.tensor(allWeight).to(device)
     val pyMemory = memory

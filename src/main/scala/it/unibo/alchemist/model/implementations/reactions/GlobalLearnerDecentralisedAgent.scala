@@ -7,7 +7,7 @@ import it.unibo.alchemist.model.implementations.nodes.SimpleNodeManager
 import it.unibo.alchemist.model.interfaces._
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist
 import it.unibo.learning.Box
-import it.unibo.learning.abstractions.{ActionSpace, AgentState, Contextual, ReplayBuffer}
+import it.unibo.learning.abstractions.{ActionSpace, AgentState, Contextual, QueueReplayBuffer, ReplayBuffer}
 import it.unibo.learning.agents.Learner
 import it.unibo.learning.network.torch.writer
 import org.apache.commons.math3.random.RandomGenerator
@@ -30,7 +30,7 @@ class GlobalLearnerDecentralisedAgent[T, P <: Position[P]](
 ) extends AbstractGlobalReaction[T, P](environment, timeDistribution)
     with AbstractGlobalLearner {
   private val randomScala = new ScafiIncarnationForAlchemist.AlchemistRandomWrapper(random)
-  private val buffer = new ReplayBuffer(bufferSize, randomScala)
+  private val buffer = new QueueReplayBuffer(bufferSize, randomScala)
   private var actionMemory: Seq[(Int, Contextual)] = Seq.empty
   private var stateMemory: Seq[AgentState] = Seq.empty
 
@@ -87,7 +87,8 @@ class GlobalLearnerDecentralisedAgent[T, P <: Position[P]](
       }
 
       writer.add_scalar("Reward", totalReward, environment.getSimulation.getTime.toDouble.toInt)
-      learner.update(buffer.sample(batchSize))
+      val sample = buffer.sample(batchSize)
+      if (sample.nonEmpty) learner.update(sample)
     }
   }
 
@@ -100,7 +101,7 @@ class GlobalLearnerDecentralisedAgent[T, P <: Position[P]](
     // regret
     val mySelf = currentState.neighborhoodSensing.head(currentState.me)
     // -(bestNode._2.data - mySelf.data)ll
-    if (mySelf.data > 0) { 0 }
+    if (mySelf.data[Double] > 0) { 0 }
     else { -1 }
   }
 

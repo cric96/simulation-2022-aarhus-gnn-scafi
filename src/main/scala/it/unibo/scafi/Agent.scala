@@ -16,7 +16,7 @@ trait Agent
     with Gradients
     with StateManagement
     with FieldUtils {
-  def computeState: AgentState = {
+  def computeState(relativeDistance: P = currentPosition()): AgentState = {
     val neighborInfo = includingSelf
       .reifyField(nbr(senseEnvData[Double]("info")), nbrVector())
       .view
@@ -24,7 +24,7 @@ trait Agent
       .toMap
     val updatedNeigh = neighborInfo.updated(
       mid(),
-      NeighborInfo(senseEnvData[Double]("info"), (currentPosition().x, currentPosition().y), -1)
+      NeighborInfo(senseEnvData[Double]("info"), (relativeDistance.x, relativeDistance.y), -1)
     )
     AgentState(mid(), List(updatedNeigh), Contextual.empty)
   }

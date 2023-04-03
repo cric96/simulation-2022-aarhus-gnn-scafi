@@ -20,13 +20,13 @@ variables:
       it.unibo.learning.Box(width.as[Double], spacing.as[Double], randomness.as[Double])
     language: application/x-scala
 
-  batchSize: &batchSize { formula: 64, language: application/x-scala }
-  episodeLength: &episodeLength { formula: 100, language: application/x-scala }
+  batchSize: &batchSize { formula: 512, language: application/x-scala }
+  episodeLength: &episodeLength { formula: 150, language: application/x-scala }
   bufferSize: &bufferSize { formula: 100000, language: application/x-scala }
   windowSize: &windowSize { formula: 5, language: application/x-scala }
   actionSpaceEvaluated: &actionSpaceEvaluated
     #formula: "it.unibo.learning.abstractions.ActionSpace.create(5, List(0, 1, 1.5, 2.0, 2.5, 3.0))"
-    formula: "it.unibo.learning.abstractions.ActionSpace.create(20, List(1), true)"
+    formula: "it.unibo.learning.abstractions.ActionSpace.create(5, List(0.5), true)"
     language: application/x-scala
 
   neuralNet: &neuralNet
@@ -37,7 +37,7 @@ variables:
       import it.unibo.learning.network._;
       import it.unibo.scripting._;
       new MLPSpatial(
-        hiddenSize = 128,
+        hiddenSize = 64,
         actionSpace = actionSpaceEvaluated.as[List[Any]]
       )
     language: application/x-scala
@@ -50,9 +50,9 @@ variables:
       import it.unibo.scripting._;
       new DeepQLearning(
         epsilon = DecayReference.exponentialDecay(0.9, 0.1).bounded(0.02),
-        alpha = 0.004,
-        gamma = 0.90,
-        copyEach = 100,
+        alpha = 0.0001,
+        gamma = 0.99,
+        copyEach = 150,
         referenceNet = neuralNet.as[NeuralNetworkRL]
       )
     language: application/x-scala
@@ -79,8 +79,8 @@ environment:
       parameters: [*layerMolecule, *learner, *bufferSize, *windowSize, *batchSize, *actionSpaceEvaluated, *episodeLength, *environmentBox, *frequency]
 
 network-model:
-  type: ClosestN #*connectionType
-  parameters: [5]
+  type: ConnectWithinDistance
+  parameters: [ 300 ]
 
 _reactions:
   - program: &program
@@ -90,7 +90,7 @@ _reactions:
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [it.unibo.scafi.ExplorerCollective, 1.1 ]
+            parameters: [it.unibo.scafi.ExplorerCollective, 2 ]
       - program: send
 deployments:
   type: Grid
