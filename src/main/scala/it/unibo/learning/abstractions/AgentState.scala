@@ -10,7 +10,9 @@ case class AgentState(
     me: Int,
     neighborhoodSensing: List[Map[Int, NeighborInfo]],
     contextual: Contextual
-)
+) {
+  def extractCurrentLocal: NeighborInfo = neighborhoodSensing.head(me)
+}
 
 object AgentState {
   object NeighborInfo {
@@ -30,5 +32,10 @@ object AgentState {
 
   implicit class MapExtension(map: Map[String, Any]) {
     def obtain[S](key: String): S = map(key).asInstanceOf[S]
+  }
+
+  implicit class MapNeighExtension(map: Map[Int, NeighborInfo]) {
+    def withoutMe(me: Int): Map[Int, NeighborInfo] = map.filterNot(_._1 == me)
+    def me(me: Int): NeighborInfo = map(me)
   }
 }

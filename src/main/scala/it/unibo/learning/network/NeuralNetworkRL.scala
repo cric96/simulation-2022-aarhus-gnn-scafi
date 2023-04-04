@@ -87,7 +87,8 @@ object NeuralNetworkRL {
     }
     def encodeSpatial(state: AgentState, neigh: Int, considerAction: Boolean): py.Any = {
       val states: LazyList[Double] = {
-        val currentSnapshot = state.neighborhoodSensing.head.toList.sortBy(_._2.distance[Double]).take(neigh)
+        val currentSnapshot =
+          state.neighborhoodSensing.head.withoutMe(state.me).toList.sortBy(_._2.distance[Double]).take(neigh)
         val data = currentSnapshot
           .flatMap { case (id, data) =>
             List(data.data, data.distanceVector[(Double, Double)]._1, data.distanceVector[(Double, Double)]._2)
@@ -100,8 +101,13 @@ object NeuralNetworkRL {
           data
         }
       }
+      val localInformation = LazyList[Double](
+        state.extractCurrentLocal.data[Double],
+        state.extractCurrentLocal.distanceVector[(Double, Double)]._1,
+        state.extractCurrentLocal.distanceVector[(Double, Double)]._2
+      )
       val fill: LazyList[Double] = LazyList.continually(0.0)
-      (states #::: fill).take(neigh * (if (considerAction) 4 else 3)).toPythonCopy
+      (localInformation #::: (states #::: fill)).take(neigh * (if (considerAction) 4 else 3)).toPythonCopy
     }
   }
 }

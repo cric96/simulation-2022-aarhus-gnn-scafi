@@ -86,7 +86,7 @@ class GlobalLearnerDecentralisedAgentCollective[T, P <: Position[P]](
     if (stateMemory.nonEmpty) {
       var totalReward = 0.0
       stateMemory.zip(actionMemory).zip(states).foreach { case ((previousState, action), newState) =>
-        val reward = rewardFunction(previousState, newState, action, 0.0)
+        val (reward) = rewardFunction(previousState, newState, action, 0.0)
         totalReward += reward
         buffer.put(previousState, action, reward, newState)
       }
@@ -103,13 +103,18 @@ class GlobalLearnerDecentralisedAgentCollective[T, P <: Position[P]](
       action: Int,
       collectiveReward: Double
   ): Double = {
-    // regret
+    val target = 30
     val mySelf = currentState.neighborhoodSensing.head(currentState.me)
     val center = environment.makePosition(500, 500) // just for now
     val myPosition = environment.getPosition(environment.getNodeByID(currentState.me))
     val distanceReward = 1 - ((center.distanceTo(myPosition)) / 500)
     val connectionReward = if (currentState.neighborhoodSensing.size < 2) 0 else 1
-    distanceReward + connectionReward
+    val maxDistance = currentState.neighborhoodSensing.head.minBy(_._2.distance[Double])._2.distance[Double]
+    val minDistance = currentState.neighborhoodSensing.head.maxBy(_._2.distance[Double])._2.distance[Double]
+    val deltaMax = maxDistance - target
+    val deltaMin = -(minDistance - target)
+    val collision = 1 - (deltaMax + deltaMax) / 300
+    distanceReward + connectionReward + collision
     /*if (mySelf.data[Double] > 0) { 0 }
     else if (currentState.neighborhoodSensing.size < 2) { -10 }
     else { -1 }*/
