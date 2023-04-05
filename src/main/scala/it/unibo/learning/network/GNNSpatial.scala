@@ -14,12 +14,12 @@ class GNNSpatial(
 ) extends NeuralNetworkRL {
   val True = torch.tensor(Seq(true).toPythonCopy)
 
-  override val underlying: py.Dynamic = GNNDQN(3, hiddenSize, actionSpace.size)
+  override val underlying: py.Dynamic = GNNDQN(encoder.shape.head, hiddenSize, actionSpace.size)
 
   override def forward(input: py.Dynamic)(implicit session: PythonMemoryManager.Session): py.Dynamic = {
     import session._
     val converted = input.as[Seq[py.Dynamic]].map(_.record())
-    //println(converted(1))
+    // println(converted(1))
     underlying((converted.head).record(), converted(1)).record().bracketAccess(converted(2).record())
   }
 
@@ -44,36 +44,24 @@ class GNNSpatial(
     }
   override def cloneNetwork: NeuralNetworkRL = new GNNSpatial(hiddenSize, actionSpace, encoder)
 
-  def computeNeighborhoodIndex(num: Int): py.Dynamic = {
-    val neighborhoodIndex =
-      List(
-        List(0) ::: List.fill(num)(0) ::: List.range(1, num + 1),
-        List(0) ::: (List.range(1, num + 1)) ::: List.fill(num)(0)
-      )
-    val neighborhoodIndexPython = neighborhoodIndex.map(_.toPythonCopy).toPythonCopy
-    neighborhoodIndexPython.as[py.Dynamic]
-  }
-
-  override def policyBatch(device: py.Any): Seq[AgentState] => Seq[Int] = {
-    states => {
-      implicit val session = PythonMemoryManager.session()
-      // context
-      import session._
-      val batch = encoder.encodeBatch(
-        states.map(encoder.encode),
-        device
-      )
-      py.`with`(torch.no_grad()) { _ =>
-        val result = this.forward(batch).record()
-        val max = result
-          .max(1)
-          .record()
-          .bracketAccess(1)
-          .record()
-        val index = max.tolist().as[Seq[Int]]
-        session.clear()
-        index
-      }
+  override def policyBatch(device: py.Any): Seq[AgentState] => Seq[Int] = { states =>
+    implicit val session = PythonMemoryManager.session()
+    // context
+    import session._
+    val batch = encoder.encodeBatch(
+      states.map(encoder.encode),
+      device
+    )
+    py.`with`(torch.no_grad()) { _ =>
+      val result = this.forward(batch).record()
+      val max = result
+        .max(1)
+        .record()
+        .bracketAccess(1)
+        .record()
+      val index = max.tolist().as[Seq[Int]]
+      session.clear()
+      index
     }
   }
 

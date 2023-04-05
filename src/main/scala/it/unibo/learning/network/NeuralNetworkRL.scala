@@ -83,8 +83,19 @@ object NeuralNetworkRL {
         val actions = currentSnapshot.map(_._2.oldAction[Int])
         data.zip(actions).map { case (data, action) => List(data, action.toDouble).toPythonCopy }.toPythonCopy
       } else {
-        data.zip(position).map { case (data, position) => List(data, position._1, position._2).toPythonCopy }.toPythonCopy
+        data
+          .zip(position)
+          .map { case (data, position) => List(data, position._1, position._2).toPythonCopy }
+          .toPythonCopy
       }
+    }
+    def encodeSpatialUnboundedLocal(state: AgentState, considerAction: Boolean): py.Any = {
+      val local = state.neighborhoodSensing.head.me(state.me)
+      Seq(
+        local.data[Double],
+        local.distanceVector[(Double, Double)]._1,
+        local.distanceVector[(Double, Double)]._2
+      ).toPythonCopy
     }
     def encodeSpatial(state: AgentState, neigh: Int, considerAction: Boolean): py.Any = {
       val states: LazyList[Double] = {
