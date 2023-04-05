@@ -20,7 +20,7 @@ variables:
       it.unibo.learning.Box(width.as[Double], spacing.as[Double], randomness.as[Double])
     language: application/x-scala
 
-  batchSize: &batchSize { formula: 128, language: application/x-scala }
+  batchSize: &batchSize { formula: 32, language: application/x-scala }
   episodeLength: &episodeLength { formula: 150, language: application/x-scala }
   bufferSize: &bufferSize { formula: 100000, language: application/x-scala }
   windowSize: &windowSize { formula: 5, language: application/x-scala }

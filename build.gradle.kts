@@ -2,7 +2,6 @@
 
 plugins {
     application
-    alias(libs.plugins.multiJvmTesting) // Pre-configures the Java toolchains
     alias(libs.plugins.taskTree) // Helps debugging dependencies among gradle tasks
     scala
 }
@@ -22,11 +21,6 @@ dependencies {
     // Scalapy
     implementation(libs.scalapy)// https://mvnrepository.com/artifact/org.scala-lang/scala-library
 }
-
-multiJvm {
-    jvmVersionForCompilation.set(11)
-}
-
 val batch: String by project
 val maxTime: String by project
 val variables: String by project
@@ -64,7 +58,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
             // Uses the latest version of java
             javaLauncher.set(
                 javaToolchains.launcherFor {
-                    languageVersion.set(JavaLanguageVersion.of(multiJvm.latestJava))
+                    languageVersion.set(JavaLanguageVersion.of(11))
                 }
             )
             // These are the program arguments

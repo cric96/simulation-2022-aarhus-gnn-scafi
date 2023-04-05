@@ -7,7 +7,7 @@ import me.shadaj.scalapy.py
 /** An NN used in the context of RL */
 trait GraphNeuralNetworkRL {
   val underlying: py.Dynamic
-  def forward(input: py.Dynamic)(implicit session: PythonMemoryManager.Session): py.Dynamic = underlying(input)
+  def forward(input: py.Dynamic)(implicit session: PythonMemoryManager.Session): py.Dynamic = underlying(input.x, input.edge_index)
   def actionSpace: List[Any]
   def cloneNetwork: GraphNeuralNetworkRL
   def policy(device: py.Any): Graph[AgentState] => Graph[Int]

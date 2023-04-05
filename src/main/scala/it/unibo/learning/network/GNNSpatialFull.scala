@@ -22,17 +22,19 @@ class GNNSpatialFull(
     val _underlying = underlying
     val _device = device
     (graph: Graph[AgentState]) => {
-      val encoded = encoder.encode(graph).asInstanceOf[py.Dynamic]
-      val normalized = encoder.normalize(encoded.x).record()
-      val tensor = normalized.to(_device)
-      val output = _underlying.forward(tensor, encoded.edge_index.to(_device)).record()
-      val action = output
-        .max(1)
-        .record()
-        .bracketAccess(1)
-        .record()
-      val actionList = action.tolist().as[Seq[Int]]
-      Graph(actionList, graph.connections)
+      py.`with`(torch.no_grad()) { _ =>
+        val encoded = encoder.encode(graph, device).asInstanceOf[py.Dynamic]
+        val normalized = encoder.normalize(encoded.x).record()
+        val tensor = normalized.to(_device)
+        val output = _underlying.forward(tensor, encoded.edge_index.to(_device)).record()
+        val action = output
+          .max(1)
+          .record()
+          .bracketAccess(1)
+          .record()
+        val actionList = action.tolist().as[Seq[Int]]
+        Graph(actionList, graph.connections)
+      }
     }
   }
 }

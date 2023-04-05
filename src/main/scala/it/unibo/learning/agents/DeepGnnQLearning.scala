@@ -48,39 +48,40 @@ class DeepGnnQLearning(
     import session._
     // targetNetwork.underlying.train()
     // policyNetwork.underlying.train()
-    val states = referenceNet.encoder.encodeBatch(batch.map(_.stateT).map(referenceNet.encoder.encode))
-    val action = referenceNet.encoder.encodeBatch(batch.map(_.actionT).map(referenceNet.encoder.encodeInt))
+    val states = referenceNet.encoder.encodeBatchNormalize(batch.map(_.stateT).map(referenceNet.encoder.encode(_, device = device).record()))
+    val action = referenceNet.encoder.encodeBatch(batch.map(_.actionT).map(referenceNet.encoder.encodeInt(_, device).record()))
     val rewards = torch.nn.functional
       .normalize(
-        referenceNet.encoder.encodeBatch(batch.map(_.rewardTPlus).map(referenceNet.encoder.encodeDouble)).record().x,
+        referenceNet.encoder.encodeBatch(batch.map(_.rewardTPlus).map(referenceNet.encoder.encodeDouble(_, device).record())).record().x,
         dim = 0
-      )
+      ).record().to(device)
       .record()
-    val nextStates = referenceNet.encoder.encodeBatch(batch.map(_.stateTPlus).map(referenceNet.encoder.encode))
+    val nextStates = referenceNet.encoder.encodeBatchNormalize(batch.map(_.stateTPlus).map(referenceNet.encoder.encode(_, device = device).record())).record()
     val stateActionValue =
       policyNetwork
         .forward(states)
         .record()
         .gather(
           1,
-          torch
-            .tensor(action.x, device = device)
+          action.x.to(device)
             .record()
-            .view(batch.size, 1)
+            .view(-1, 1)
             .record()
         )
         .record()
+
+
+    referenceNet.underlying.applyDynamic()
     val nextStateValues = py.`with`(torch.no_grad()) { _ =>
       targetNetwork
         .forward(nextStates)
-        .record()
         .record()
         .max(1)
         .record()
         .bracketAccess(0)
         .record()
     }
-    val expectedValue = ((nextStateValues * gamma).record() + rewards.x).record()
+    val expectedValue = ((nextStateValues * gamma).record() + rewards).record()
     val criterion = nn.SmoothL1Loss()
     val loss = criterion(stateActionValue, expectedValue.unsqueeze(1).record()).record()
     optimizer.zero_grad()
