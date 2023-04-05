@@ -28,6 +28,8 @@ object AgentState {
   }
   class NeighborInfo(map: Map[String, Any]) extends scala.Dynamic {
     def selectDynamic[A](name: String): A = map(name).asInstanceOf[A]
+
+    override def toString: String = s"information: ${map.toString()}"
   }
 
   implicit class MapExtension(map: Map[String, Any]) {

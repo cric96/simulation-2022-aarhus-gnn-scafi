@@ -7,7 +7,7 @@ import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.Any.from
 import me.shadaj.scalapy.py.SeqConverters
 
-class UnboundedSpatialEncoder(neigh: Int) extends NeuralNetworkEncoder {
+class UnboundedSpatialEncoder() extends NeuralNetworkEncoder {
   val True = torch.tensor(Seq(true).toPythonCopy)
   override def shape: Seq[Int] = Seq(3)
 
@@ -26,6 +26,7 @@ class UnboundedSpatialEncoder(neigh: Int) extends NeuralNetworkEncoder {
   override def encodeBatch(seq: Seq[py.Any], device: py.Any)(implicit
       session: PythonMemoryManager.Session
   ): py.Dynamic = {
+    import session._
     val dataRaw = scala.collection.mutable.Buffer.empty[py.Dynamic]
     val indexRawStart = scala.collection.mutable.Buffer.empty[py.Any]
     val indexRawEnd = scala.collection.mutable.Buffer.empty[py.Any]
@@ -42,11 +43,12 @@ class UnboundedSpatialEncoder(neigh: Int) extends NeuralNetworkEncoder {
       indexRawEnd.addAll(yUpdated.head.map(_.as[py.Any]))
       maskRaw.addAll(true :: List.fill(x.size - 1)(false).map(_.as[py.Any]))
     }
-    val x = torch.tensor(dataRaw.toPythonCopy, device = device).record()
+    val size = seq.head.as[py.Dynamic].bracketAccess(0).bracketAccess(0).as[Seq[Double]].size
+    val x = torch.tensor(dataRaw.toPythonCopy, device = device).record().reshape(-1, size).record()
     val index =
       torch.tensor(Seq(indexRawStart.toPythonCopy, indexRawEnd.toPythonCopy).toPythonCopy, device = device).record()
     val mask = torch.tensor(maskRaw.toPythonCopy, device = device).record()
-    Seq(x, index, mask).toPythonCopy.as[py.Dynamic]
+    Seq(normalize(x), index, mask).toPythonCopy.as[py.Dynamic]
   }
 
   def computeNeighborhoodIndex(num: Int): py.Dynamic = {
