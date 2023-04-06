@@ -2,10 +2,13 @@ package it.unibo.learning.network
 
 import it.unibo.learning.abstractions.AgentState
 import it.unibo.learning.network.torch._
+import it.unibo.learning.network.torch.{util => torchUtil}
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.Any.from
-import me.shadaj.scalapy.py.SeqConverters
+import me.shadaj.scalapy.py.{PyQuote, SeqConverters}
+import scribe._
 
+import scala.collection.mutable
 class GNNSpatialFull(
     hiddenSize: Int,
     val actionSpace: List[Any],
@@ -19,22 +22,28 @@ class GNNSpatialFull(
   override def policy(device: py.Any): Graph[AgentState] => Graph[Int] = {
     implicit val session: PythonMemoryManager.Session = PythonMemoryManager.session()
     import session._
-    val _underlying = underlying
     val _device = device
     (graph: Graph[AgentState]) => {
       py.`with`(torch.no_grad()) { _ =>
-        val encoded = encoder.encode(graph, device).asInstanceOf[py.Dynamic]
+        scribe.info(s"Before forward pass : ${torchUtil.dumbMemory(device)}")
+        val encoded = encoder.encode(graph, _device).asInstanceOf[py.Dynamic]
+        encoded.record()
         val normalized = encoder.normalize(encoded.x).record()
-        val tensor = normalized.to(_device)
-        val output = _underlying.forward(tensor, encoded.edge_index.to(_device)).record()
-        val action = output
-          .max(1)
-          .record()
-          .bracketAccess(1)
-          .record()
-        val actionList = action.tolist().as[Seq[Int]]
-        Graph(actionList, graph.connections)
+        val tensor = normalized.to(_device).record()
+        val output = underlying(tensor, encoded.edge_index.record().to(_device).record()).record()
+        val buffer = mutable.Buffer.empty[Int]
+        py.local {
+          val data = py"${output}.max(1)[1].tolist()"
+          for(i <- 0 until py.Dynamic.global.len(data).as[Int]) {
+            buffer += data.bracketAccess(i).as[Int]
+          }
+        }
+        scribe.info(s"After forward pass : ${torchUtil.dumbMemory(device)}")
+        session.clear()
+        scribe.info(s"Clear after forward pass : ${torchUtil.dumbMemory(device)}")
+        Graph(buffer.toSeq, graph.connections)
       }
     }
+
   }
 }

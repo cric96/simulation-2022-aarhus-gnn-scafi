@@ -22,4 +22,8 @@ object util {
 
   def getAllTensors(): Seq[py.Dynamic] =
     py.Dynamic.global.get_all_tensor().as[Seq[py.Dynamic]]
+    
+  def dumbMemory(device: py.Any): String = {
+    torch.cuda.mem_get_info(device).toString()
+  }
 }

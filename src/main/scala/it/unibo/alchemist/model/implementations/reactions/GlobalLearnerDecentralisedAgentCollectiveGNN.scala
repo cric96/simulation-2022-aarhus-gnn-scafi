@@ -55,11 +55,13 @@ class GlobalLearnerDecentralisedAgentCollectiveGNN[T, P <: Position[P]](
     val graph = Graph(currentStates, neighborhoodCompute)
     val currentActions = learner.policy(graph)
     improvePolicy(graph)
+    scribe.info(s"Time = ${currentTime}")
     actionMemory = currentActions
     stateMemory = graph
     val toPerform = managers.map(_.node.getId).zip(currentActions.data).toMap
     performAction(toPerform)
     if ((currentTime.toInt % episodeLength) == 0) {
+      scribe.info("Change environment")
       decayable.foreach(_._2.update())
       decayable.foreach { case (name, reference) =>
         writer.add_scalar(name, reference.value.toString.toDouble, environment.getSimulation.getTime.toDouble.toInt)
@@ -85,6 +87,8 @@ class GlobalLearnerDecentralisedAgentCollectiveGNN[T, P <: Position[P]](
       newPosition.zip(agents).foreach { case (position, node) =>
         resetNode(position.asInstanceOf[P], node)
       }
+      this.actionMemory = null
+      this.stateMemory = null
       initializationComplete(environment.getSimulation.getTime, environment)
     }
   }

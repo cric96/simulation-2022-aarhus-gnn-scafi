@@ -19,7 +19,6 @@ class GNNSpatial(
   override def forward(input: py.Dynamic)(implicit session: PythonMemoryManager.Session): py.Dynamic = {
     import session._
     val converted = input.as[Seq[py.Dynamic]].map(_.record())
-    // println(converted(1))
     underlying((converted.head).record(), converted(1)).record().bracketAccess(converted(2).record())
   }
 

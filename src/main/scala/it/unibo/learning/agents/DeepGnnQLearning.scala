@@ -1,10 +1,13 @@
 package it.unibo.learning.agents
 
 import it.unibo.alchemist.model.implementations.reactions.AbstractGlobalLearner
+import it.unibo.learning.abstractions.AgentState.NeighborInfo
 import it.unibo.learning.abstractions.{AgentState, DecayReference, GraphReplayBuffer}
 import it.unibo.learning.network.torch._
+import it.unibo.learning.network.torch.{util => torchUtil}
 import it.unibo.learning.network.{Graph, GraphNeuralNetworkRL}
 import me.shadaj.scalapy.py
+import me.shadaj.scalapy.py.SeqConverters
 
 import scala.util.Random
 
@@ -25,6 +28,7 @@ class DeepGnnQLearning(
   targetNetwork.underlying.to(device)
   policyNetwork.underlying.to(device)
   private val optimizer = optim.RMSprop(policyNetwork.underlying.parameters(), alpha)
+  private val encoder = targetNetwork.encoder
   private val behaviouralPolicy = policyNetwork.policy(device)
   targetNetwork.underlying.eval()
   policyNetwork.underlying.eval()
@@ -42,21 +46,24 @@ class DeepGnnQLearning(
 
   override def load(where: String): Graph[AgentState] => Graph[Int] = ???
 
+  implicit val session: PythonMemoryManager.Session = PythonMemoryManager.session()
+  import session._
   override def update(batch: Seq[GraphReplayBuffer.GraphExperience]): Unit = {
-    implicit val session: PythonMemoryManager.Session = PythonMemoryManager.session()
+
     // context
-    import session._
     // targetNetwork.underlying.train()
     // policyNetwork.underlying.train()
-    val states = referenceNet.encoder.encodeBatchNormalize(batch.map(_.stateT).map(referenceNet.encoder.encode(_, device = device).record()))
-    val action = referenceNet.encoder.encodeBatch(batch.map(_.actionT).map(referenceNet.encoder.encodeInt(_, device).record()))
-    val rewards = torch.nn.functional
-      .normalize(
-        referenceNet.encoder.encodeBatch(batch.map(_.rewardTPlus).map(referenceNet.encoder.encodeDouble(_, device).record())).record().x,
-        dim = 0
-      ).record().to(device)
-      .record()
-    val nextStates = referenceNet.encoder.encodeBatchNormalize(batch.map(_.stateTPlus).map(referenceNet.encoder.encode(_, device = device).record())).record()
+    //val states = referenceNet.encoder.encodeBatchNormalize(batch.map(_.stateT).map(referenceNet.encoder.encode(_, device = device).record()))
+    //states.record()
+    val states = encoder.encodeBatchNormalize[Seq[Double]](batch.map(_.stateT).map(encoder.encode(_, device = device).record()), device)(_.toPythonCopy).record()
+    val action = referenceNet.encoder.encodeBatch[Int](batch.map(_.actionT).map(referenceNet.encoder.encodeInt(_, device).record()), device)(identity[Int]).record()
+    val rewardsRaw = referenceNet.encoder.encodeBatch[Double](
+      batch.map(_.rewardTPlus).map(referenceNet.encoder.encodeDouble(_, device).record()), device)(identity[Double]
+    ).record().x.record()
+    val rewards = torch.nn.functional.normalize(rewardsRaw, dim = 0).record().to(device).record()
+
+    val nextStates = encoder.encodeBatchNormalize[Seq[Double]](batch.map(_.stateTPlus).map(referenceNet.encoder.encode(_, device = device).record()), device)(_.toPythonCopy).record()
+
     val stateActionValue =
       policyNetwork
         .forward(states)
@@ -69,9 +76,6 @@ class DeepGnnQLearning(
             .record()
         )
         .record()
-
-
-    referenceNet.underlying.applyDynamic()
     val nextStateValues = py.`with`(torch.no_grad()) { _ =>
       targetNetwork
         .forward(nextStates)
@@ -81,6 +85,7 @@ class DeepGnnQLearning(
         .bracketAccess(0)
         .record()
     }
+
     val expectedValue = ((nextStateValues * gamma).record() + rewards).record()
     val criterion = nn.SmoothL1Loss()
     val loss = criterion(stateActionValue, expectedValue.unsqueeze(1).record()).record()
@@ -89,11 +94,13 @@ class DeepGnnQLearning(
     writer.add_scalar("Loss", loss.detach().item().as[Double], updates)
     torch.nn.utils.clip_grad_value_(policyNetwork.underlying.parameters(), 1)
     optimizer.step()
-    session.clear()
+
     updates += 1
     if (updates % copyEach == 0) {
       targetNetwork.underlying.load_state_dict(policyNetwork.underlying.state_dict())
     }
+    session.clear()
+    //println(torchUtil.getAllTensors().size)
     // targetNetwork.underlying.eval()
     // policyNetwork.underlying.eval()
   }

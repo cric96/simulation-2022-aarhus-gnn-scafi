@@ -20,6 +20,8 @@ dependencies {
     implementation(libs.breezelib)
     // Scalapy
     implementation(libs.scalapy)// https://mvnrepository.com/artifact/org.scala-lang/scala-library
+    implementation("com.outr:scribe_2.13:3.11.1")
+    implementation("com.outr:scribe-file_2.13:3.11.1")
 }
 val batch: String by project
 val maxTime: String by project

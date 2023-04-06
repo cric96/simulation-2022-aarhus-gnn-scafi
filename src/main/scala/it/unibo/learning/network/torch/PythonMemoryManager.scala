@@ -1,5 +1,6 @@
 package it.unibo.learning.network.torch
 
+import it.unibo.learning.network.torch.util.getAllTensors
 import me.shadaj.scalapy.py
 
 object PythonMemoryManager {
