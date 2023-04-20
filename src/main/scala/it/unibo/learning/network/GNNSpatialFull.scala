@@ -12,7 +12,7 @@ import scala.collection.mutable
 class GNNSpatialFull(
     hiddenSize: Int,
     val actionSpace: List[Any],
-    val encoder: GraphNeuralNetworkEncoder = new UnboundedSpatialEncoderFull()
+    val encoder: NeuralNetworkEncoder[Graph] = new UnboundedSpatialEncoderFull()
 ) extends GraphNeuralNetworkRL {
 
   override val underlying: py.Dynamic = GNNDQN(encoder.shape.head, hiddenSize, actionSpace.size)

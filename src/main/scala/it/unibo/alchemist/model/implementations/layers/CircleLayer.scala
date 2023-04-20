@@ -8,15 +8,9 @@ class CircleLayer[P <: Position2D[P]](
     val y: Double,
     val radius: Double,
     val value: Double
-) extends Layer[Double, P] {
-  override def getValue(p: P): Double = {
-    // check if the point is inside the circle
-    val pointX = p.getX
-    val pointY = p.getY
-    if (Math.sqrt(Math.pow(pointX - x, 2) + Math.pow(pointY - y, 2)) <= radius) {
-      value
-    } else {
-      0
-    }
-  }
+) extends Layer[Double, P]
+    with CenterBasedMovableLayer[P] {
+
+  override protected def isInside(x: Double, y: Double): Boolean =
+    Math.sqrt(Math.pow(x - movingX, 2) + Math.pow(y - movingY, 2)) <= radius
 }

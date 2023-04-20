@@ -8,7 +8,9 @@ class SquareLayer[P <: Position2D[P]](
     val width: Double,
     val height: Double,
     val value: Double
-) extends Layer[Double, P] {
+) extends Layer[Double, P] with MovableLayer {
+  var movingX = x
+  var movingY = y
   override def getValue(p: P): Double = {
     // check if the point is inside the square
     val pointX = p.getX
@@ -18,5 +20,17 @@ class SquareLayer[P <: Position2D[P]](
     } else {
       0
     }
+  }
+
+  /** move the layer of dx and dy */
+  override def moveWith(dx: Double, dy: Double): Unit = {
+    movingX += dx
+    movingY += dy
+  }
+
+  /** return the layer to its initial position */
+  override def reset(): Unit = {
+    movingX = x
+    movingY = y
   }
 }

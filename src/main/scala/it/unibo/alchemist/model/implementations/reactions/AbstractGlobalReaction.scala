@@ -7,10 +7,11 @@ import org.danilopianini.util.{ListSet, ListSets}
 import java.util
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 
-abstract class AbstractGlobalReaction[T, P <: Position[P]](
-    val environment: Environment[T, P],
-    distribution: TimeDistribution[T]
-) extends GlobalReaction[T] {
+abstract class AbstractGlobalReaction[T, P <: Position[P]]() extends GlobalReaction[T] {
+  def environment: Environment[T, P]
+
+  def distribution: TimeDistribution[T]
+
   private val actions: util.List[Action[T]] = util.List.of()
   private val conditions: util.List[Condition[T]] = util.List.of()
   override def getActions: util.List[Action[T]] = actions
@@ -53,8 +54,8 @@ abstract class AbstractGlobalReaction[T, P <: Position[P]](
 
   // Utilities methods
 
-  def agents = environment.getNodes.iterator().asScala.toList
+  def agents: Seq[Node[T]] = environment.getNodes.iterator().asScala.toList
 
-  def managers = agents.map(new SimpleNodeManager[T](_))
+  def managers: Seq[SimpleNodeManager[T]] = agents.map(new SimpleNodeManager[T](_))
 
 }

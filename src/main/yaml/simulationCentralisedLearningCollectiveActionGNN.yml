@@ -4,7 +4,6 @@ variables:
   width: &width { formula: 1000.0 }
   spacing: &spacing { formula: 200.0 }
   randomness: &randomness { formula: 25.0 }
-  learningUpdate: &frequency { formula: 10 }
   random: &random
     min: 0
     max: 0
@@ -12,7 +11,7 @@ variables:
     default: 0
 
   range: &range
-    formula: 400
+    formula: 300
 
   environmentBox: &environmentBox
     formula: |
@@ -21,18 +20,19 @@ variables:
     language: application/x-scala
 
   batchSize: &batchSize { formula: 32, language: application/x-scala }
-  episodeLength: &episodeLength { formula: 150, language: application/x-scala }
-  bufferSize: &bufferSize { formula: 100000, language: application/x-scala }
-  windowSize: &windowSize { formula: 5, language: application/x-scala }
+  episodeLength: &episodeLength { formula: 200, language: application/x-scala }
+  bufferSize: &bufferSize { formula: 1000, language: application/x-scala }
   actionSpaceEvaluated: &actionSpaceEvaluated
-    #formula: "it.unibo.learning.abstractions.ActionSpace.create(5, List(0, 1, 1.5, 2.0, 2.5, 3.0))"
     formula: "it.unibo.learning.abstractions.ActionSpace.create(5, List(0.5), true)"
     language: application/x-scala
 
   neuralNet: &neuralNet
     formula: |
       import it.unibo.learning.network.torch.torch;
+      import me.shadaj.scalapy.py
       torch.manual_seed(0)
+      py.module("numpy").random.seed(0)
+      py.module("random").seed(0)
       //torch.manual_seed(random.as[Double].toInt);
       import it.unibo.learning.network._;
       import it.unibo.scripting._;
@@ -52,7 +52,7 @@ variables:
         epsilon = DecayReference.exponentialDecay(0.9, 0.1).bounded(0.02),
         alpha = 0.0001,
         gamma = 0.99,
-        copyEach = 150,
+        copyEach = 200,
         referenceNet = neuralNet.as[GraphNeuralNetworkRL]
       )
     language: application/x-scala
@@ -76,7 +76,7 @@ environment:
         type: DiracComb
         parameters: [ 0.2, 1.0 ]
       type: GlobalLearnerDecentralisedAgentCollectiveGNN
-      parameters: [*layerMolecule, *learner, *bufferSize, *windowSize, *batchSize, *actionSpaceEvaluated, *episodeLength, *environmentBox, *frequency]
+      parameters: [*learner, *bufferSize, *batchSize, *actionSpaceEvaluated, *episodeLength, *environmentBox]
 
 network-model:
   type: ConnectWithinDistance

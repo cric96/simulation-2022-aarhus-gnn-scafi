@@ -1,17 +1,22 @@
 package it.unibo.learning.agents
 
-import it.unibo.alchemist.model.implementations.reactions.AbstractGlobalLearner
+import it.unibo.alchemist.model.implementations.reactions.DecayableSource
 import it.unibo.learning.abstractions.AgentState
 import it.unibo.learning.abstractions.ReplayBuffer.Experience
 
 import scala.util.Random
 
-trait Learner {
-  def policy: (AgentState) => Int // current policy
-  def policyBatch: (Seq[AgentState] => Seq[Int]) // current policy
+trait Learner[F[A]] {
+
+  def policy: (F[AgentState]) => F[Int] // current policy
+
   def store(where: String): Unit // store optimal policy
-  def load(where: String): AgentState => Int // load policy stored
-  def update(batch: Seq[Experience]): Unit // update the internal state following the experience computed
+
+  def load(where: String): F[AgentState] => F[Int] // load policy stored
+
+  def update(batch: Seq[Experience[F]]): Unit // update the internal state following the experience computed
+
   def injectRandom(random: Random): Unit
-  def injectCentralAgent(agent: AbstractGlobalLearner): Unit
+
+  def injectCentralAgent(agent: DecayableSource): Unit
 }
