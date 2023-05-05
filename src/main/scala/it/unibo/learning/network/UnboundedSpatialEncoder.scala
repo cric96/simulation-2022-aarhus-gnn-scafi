@@ -9,7 +9,7 @@ import me.shadaj.scalapy.py.Any.from
 import me.shadaj.scalapy.py.{PyQuote, SeqConverters}
 import me.shadaj.scalapy.readwrite.{Reader, Writer}
 
-class UnboundedSpatialEncoderFull(override val unsafe: Boolean = true) extends NeuralNetworkEncoder[Graph] {
+class UnboundedSpatialEncoder(override val unsafe: Boolean = true) extends NeuralNetworkEncoder[Graph] {
   val True = torch.tensor(Seq(true).toPythonCopy)
   override def shape: Seq[Int] = Seq(3)
 

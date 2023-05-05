@@ -9,15 +9,15 @@ import me.shadaj.scalapy.py.{PyQuote, SeqConverters}
 import scribe._
 
 import scala.collection.mutable
-class GNNSpatialFull(
+class GNNSpatial(
     hiddenSize: Int,
     val actionSpace: List[Any],
-    val encoder: NeuralNetworkEncoder[Graph] = new UnboundedSpatialEncoderFull()
+    val encoder: NeuralNetworkEncoder[Graph] = new UnboundedSpatialEncoder()
 ) extends GraphNeuralNetworkRL {
 
   override val underlying: py.Dynamic = GNNDQN(encoder.shape.head, hiddenSize, actionSpace.size)
 
-  override def cloneNetwork: GraphNeuralNetworkRL = new GNNSpatialFull(hiddenSize, actionSpace, encoder)
+  override def cloneNetwork: GraphNeuralNetworkRL = new GNNSpatial(hiddenSize, actionSpace, encoder)
 
   override def policy(device: py.Any): Graph[AgentState] => Graph[Int] = {
     implicit val session: PythonMemoryManager.Session = PythonMemoryManager.session()

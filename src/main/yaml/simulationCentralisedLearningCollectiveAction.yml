@@ -20,7 +20,7 @@ variables:
     language: application/x-scala
 
   batchSize: &batchSize { formula: 512, language: application/x-scala }
-  episodeLength: &episodeLength { formula: 150, language: application/x-scala }
+  episodeLength: &episodeLength { formula: 200, language: application/x-scala }
   bufferSize: &bufferSize { formula: 100000, language: application/x-scala }
   windowSize: &windowSize { formula: 5, language: application/x-scala }
   actionSpaceEvaluated: &actionSpaceEvaluated
@@ -51,7 +51,7 @@ variables:
         epsilon = DecayReference.exponentialDecay(0.9, 0.1).bounded(0.02),
         alpha = 0.0001,
         gamma = 0.99,
-        copyEach = 150,
+        copyEach = episodeLength.as[Int],
         referenceNet = neuralNet.as[MlpNeuralNetworkRL]
       )
     language: application/x-scala
@@ -91,9 +91,13 @@ _reactions:
           - type: RunScafiProgram
             parameters: [it.unibo.scafi.ExplorerCollective, 2 ]
       - program: send
+
 deployments:
   type: Grid
   parameters: [0, 0, *width, *width, *spacing, *spacing, *randomness, *randomness]
+  contents:
+    molecule: view
+    concentration: 100.0
   programs:
     - *program
 export:

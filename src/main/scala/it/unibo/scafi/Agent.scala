@@ -26,7 +26,7 @@ trait Agent
       mid(),
       NeighborInfo(senseEnvData[Double]("info"), (relativeDistance.x, relativeDistance.y), -1)
     )
-    AgentState(mid(), List(updatedNeigh), Contextual.empty)
+    AgentState(mid(), node.get[Double]("area"), List(updatedNeigh), Contextual.empty)
   }
 
   def policy: AgentState => Int = {

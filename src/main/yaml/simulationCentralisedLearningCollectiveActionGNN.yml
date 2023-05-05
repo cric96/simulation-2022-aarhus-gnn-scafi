@@ -33,10 +33,11 @@ variables:
       torch.manual_seed(0)
       py.module("numpy").random.seed(0)
       py.module("random").seed(0)
+      torch.use_deterministic_algorithms(true)
       //torch.manual_seed(random.as[Double].toInt);
       import it.unibo.learning.network._;
       import it.unibo.scripting._;
-      new GNNSpatialFull(
+      new GNNSpatial(
         hiddenSize = 64,
         actionSpace = actionSpaceEvaluated.as[List[Any]]
       )
@@ -95,6 +96,9 @@ _reactions:
 deployments:
   type: Grid
   parameters: [0, 0, *width, *width, *spacing, *spacing, *randomness, *randomness]
+  contents:
+    molecule: view
+    concentration: 100.0
   programs:
     - *program
 export:

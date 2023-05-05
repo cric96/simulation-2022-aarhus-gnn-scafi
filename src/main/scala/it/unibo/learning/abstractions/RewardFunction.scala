@@ -9,7 +9,7 @@ object RewardFunction {
   type RewardInfo = (Double, Map[String, Double])
 
   def connectionAndInArea: RewardFunction = { case (_, currentState, _, _) =>
-    val target = 30
+    val target = currentState.view
     val mySelf = currentState.neighborhoodSensing.head(currentState.me)
     val targetReward = mySelf.data[Double]
     val connectionReward = if (currentState.neighborhoodSensing.head.size < 2) 0 else 1
@@ -17,13 +17,15 @@ object RewardFunction {
     val minDistance = currentState.neighborhoodSensing.head.maxBy(_._2.distance[Double])._2.distance[Double]
     val deltaMax = maxDistance - target
     val deltaMin = -(minDistance - target)
-    val collision = 1 - (deltaMax + deltaMin) / 300
+    val collision = 1 - (deltaMax + deltaMin) / 300.0
+    val collisionFactor = if (targetReward > 0.0) { collision }
+    else { 0.0 }
     (
-      targetReward + connectionReward,
+      targetReward + connectionReward + collisionFactor,
       Map(
         "target reward" -> targetReward,
         "connection reward" -> connectionReward,
-        "collision reward" -> collision
+        "collision reward" -> collisionFactor
       )
     )
   }

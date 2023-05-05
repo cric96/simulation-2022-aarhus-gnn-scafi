@@ -8,6 +8,7 @@ import scala.language.dynamics
 /** */
 case class AgentState(
     me: Int,
+    view: Double,
     neighborhoodSensing: List[Map[Int, NeighborInfo]],
     contextual: Contextual
 ) {

@@ -120,7 +120,7 @@ trait AbstractGlobalLearner[T, P <: Position[P], BatchF[_], ExperienceF[_]]
 
   private def storeVelocity(node: Node[T], velocity: (Double, Double)): Unit = {
     val (angle, module) = velocity
-    val angle3D = Point3D(math.cos(angle), -math.sin(angle), 0)
+    val angle3D = Array(math.cos(angle), math.sin(angle))
     node.setConcentration(new SimpleMolecule("velocity"), angle3D.asInstanceOf[T])
     node.setConcentration(new SimpleMolecule("angle"), angle.asInstanceOf[T])
     node.setConcentration(new SimpleMolecule("intensity"), module.asInstanceOf[T])
