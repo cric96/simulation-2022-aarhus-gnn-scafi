@@ -35,8 +35,6 @@ class DeepQLearning(
   }
   override def store(where: String): Unit = {}
 
-  override def load(where: String): AgentState => Int = ???
-
   override def injectRandom(random: Random): Unit = this.random = random
 
   override def injectCentralAgent(agent: DecayableSource): Unit = agent.attachDecayable("epsilon" -> epsilon)

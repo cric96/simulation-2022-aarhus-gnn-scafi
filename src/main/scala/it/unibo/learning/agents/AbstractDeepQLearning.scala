@@ -34,6 +34,13 @@ abstract class AbstractDeepQLearning[F[_], N <: NeuralNetworkRL[F, N]]() extends
 
   import session._
 
+  override def store(where: String): Unit = torch.save(targetNetwork.underlying.state_dict(), where)
+
+  override def load(where: String): Unit = {
+    targetNetwork.underlying.load_state_dict(torch.load(where))
+    policyNetwork.underlying.load_state_dict(torch.load(where))
+  }
+
   override def update(batch: Seq[Experience[F]]): Unit = {
     targetNetwork.underlying.train()
     policyNetwork.underlying.train()

@@ -12,7 +12,7 @@ trait Learner[F[A]] {
 
   def store(where: String): Unit // store optimal policy
 
-  def load(where: String): F[AgentState] => F[Int] // load policy stored
+  def load(where: String): Unit // load policy stored
 
   def update(batch: Seq[Experience[F]]): Unit // update the internal state following the experience computed
 

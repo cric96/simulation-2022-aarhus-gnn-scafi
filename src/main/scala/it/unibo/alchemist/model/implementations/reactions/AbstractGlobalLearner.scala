@@ -9,7 +9,7 @@ import it.unibo.learning.Box
 import it.unibo.learning.abstractions.{ActionSpace, AgentState, ArrayReplayBuffer, RewardFunction}
 import it.unibo.learning.agents.Learner
 import it.unibo.learning.network.torch.writer
-import it.unibo.scafi.space.Point3D
+import me.shadaj.scalapy.py
 import org.apache.commons.math3.random.RandomGenerator
 
 import scala.collection.convert.ImplicitConversions.`iterable AsScalaIterable`
@@ -19,6 +19,9 @@ trait AbstractGlobalLearner[T, P <: Position[P], BatchF[_], ExperienceF[_]]
     extends AbstractGlobalReaction[T, P]
     with DecayableSource {
   private val VELOCITY_MULTIPLIER = 10
+  def snapshotName: String = "global_learner"
+
+  def folder: String = "snapshot"
   def empty[A]: BatchF[A]
 
   def random: RandomGenerator
@@ -46,7 +49,7 @@ trait AbstractGlobalLearner[T, P <: Position[P], BatchF[_], ExperienceF[_]]
   protected var actionMemory: BatchF[Int] = empty
   protected var stateMemory: BatchF[AgentState] = empty
   protected var totalRewardPerEpisode: Double = 0
-
+  private val os = py.module("os")
   override protected def executeBeforeUpdateDistribution(): Unit = if (environment.getSimulation.getTime.toDouble > 1) {
     val currentTime = environment.getSimulation.getTime.toDouble
     val currentStates = prepareStates
@@ -58,6 +61,10 @@ trait AbstractGlobalLearner[T, P <: Position[P], BatchF[_], ExperienceF[_]]
     performAction(prepareActionForActing(currentActions))
     if ((currentTime.toInt % episodeLength) == 0) {
       scribe.info("Change environment")
+      if (!os.path.exists(folder).as[Boolean]) {
+        os.makedirs(folder)
+      }
+      learner.store(folder + "/" + snapshotName)
       decayable.foreach(_._2.update())
       decayable.foreach { case (name, reference) =>
         writer.add_scalar(name, reference.value.toString.toDouble, environment.getSimulation.getTime.toDouble.toInt)

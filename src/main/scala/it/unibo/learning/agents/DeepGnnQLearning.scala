@@ -28,9 +28,7 @@ class DeepGnnQLearning(
     }
   }
 
-  override def store(where: String): Unit = {}
-
-  override def load(where: String): Graph[AgentState] => Graph[Int] = ???
+  override def store(where: String): Unit = torch.save(targetNetwork.underlying.state_dict(), where)
 
   import session._
 
