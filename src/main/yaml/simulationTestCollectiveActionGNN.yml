@@ -29,7 +29,11 @@ variables:
   neuralNet: &neuralNet
     formula: |
       import it.unibo.learning.network.torch.torch;
+      import me.shadaj.scalapy.py
       torch.manual_seed(0)
+      py.module("numpy").random.seed(0)
+      py.module("random").seed(0)
+      torch.use_deterministic_algorithms(true)
       //torch.manual_seed(random.as[Double].toInt);
       import it.unibo.learning.network._;
       import it.unibo.scripting._;
@@ -46,7 +50,7 @@ variables:
       import it.unibo.learning.network.GraphNeuralNetworkRL;
       import it.unibo.scripting._;
       new DeepGnnQLearning(
-        epsilon = DecayReference.exponentialDecay(0.9, 0.1).bounded(0.02),
+        epsilon = DecayReference.exponentialDecay(0.0, 0.1).bounded(0.00),
         alpha = 0.0001,
         gamma = 0.99,
         copyEach = 200,
@@ -63,12 +67,6 @@ seeds:
 layers:
   - type: CircleLayer
     parameters: [500, 500, 200, 1]
-    molecule: info1
-  - type: CircleLayer
-    parameters: [0, 0, 200, 1 ]
-    molecule: info2
-  - type: CombineAllLayer
-    parameters: [ ]
     molecule: info
 
 environment:
@@ -79,11 +77,11 @@ environment:
         type: DiracComb
         parameters: [ 0.2, 1.0 ]
       type: GlobalLearnerDecentralisedAgentCollectiveGNN
-      parameters: [*learner, *bufferSize, *batchSize, *actionSpaceEvaluated, *episodeLength, *environmentBox, true]
+      parameters: [*learner, *bufferSize, *batchSize, *actionSpaceEvaluated, *episodeLength, *environmentBox, false]
 
 network-model:
   type: ConnectWithinDistance
-  parameters: [ *range ]
+  parameters: [ 300 ]
 
 _reactions:
   - program: &program
@@ -95,15 +93,14 @@ _reactions:
           - type: RunScafiProgram
             parameters: [it.unibo.scafi.ExplorerCollective, 2 ]
       - program: send
-
 deployments:
   type: Grid
-  parameters: [0, 0, *width, *width, *spacing, *spacing, *randomness, *randomness, true]
-  programs:
-    - *program
+  parameters: [0, 0, *width, *width, *spacing, *spacing, *randomness, *randomness]
   contents:
     molecule: view
     concentration: 100.0
+  programs:
+    - *program
 export:
   - type: CSVExporter
     parameters:

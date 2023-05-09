@@ -60,11 +60,11 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
                 }
             }
             // Uses the latest version of java
-            javaLauncher.set(
+            /*javaLauncher.set(
                 javaToolchains.launcherFor {
                     languageVersion.set(JavaLanguageVersion.of(11))
                 }
-            )
+            )*/
             // These are the program arguments
             args("-y", it.absolutePath, "-e", "$exportsDir/${it.nameWithoutExtension}-${System.currentTimeMillis()}")
             if (System.getenv("CI") == "true" || batch == "true") {

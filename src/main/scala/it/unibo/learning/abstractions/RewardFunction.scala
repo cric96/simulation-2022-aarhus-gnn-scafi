@@ -16,7 +16,7 @@ object RewardFunction {
     val maxDistance = currentState.neighborhoodSensing.head.minBy(_._2.distance[Double])._2.distance[Double]
     val minDistance = currentState.neighborhoodSensing.head.maxBy(_._2.distance[Double])._2.distance[Double]
     val deltaMax = maxDistance - target
-    val deltaMin = -(minDistance - target)
+    val deltaMin = minDistance - target
     val collision = 1 - (deltaMax + deltaMin) / 300.0
     val collisionFactor = if (targetReward > 0.0) { collision }
     else { 0.0 }

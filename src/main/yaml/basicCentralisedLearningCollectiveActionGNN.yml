@@ -21,7 +21,7 @@ variables:
 
   batchSize: &batchSize { formula: 32, language: application/x-scala }
   episodeLength: &episodeLength { formula: 200, language: application/x-scala }
-  bufferSize: &bufferSize { formula: 1000, language: application/x-scala }
+  bufferSize: &bufferSize { formula: 10000, language: application/x-scala }
   actionSpaceEvaluated: &actionSpaceEvaluated
     formula: "it.unibo.learning.abstractions.ActionSpace.create(5, List(0.5), true)"
     language: application/x-scala
@@ -29,7 +29,11 @@ variables:
   neuralNet: &neuralNet
     formula: |
       import it.unibo.learning.network.torch.torch;
+      import me.shadaj.scalapy.py
       torch.manual_seed(0)
+      py.module("numpy").random.seed(0)
+      py.module("random").seed(0)
+      torch.use_deterministic_algorithms(true)
       //torch.manual_seed(random.as[Double].toInt);
       import it.unibo.learning.network._;
       import it.unibo.scripting._;
@@ -46,10 +50,10 @@ variables:
       import it.unibo.learning.network.GraphNeuralNetworkRL;
       import it.unibo.scripting._;
       new DeepGnnQLearning(
-        epsilon = DecayReference.exponentialDecay(0.9, 0.1).bounded(0.02),
+        epsilon = DecayReference.exponentialDecay(0.99, 0.1).bounded(0.02),
         alpha = 0.0001,
         gamma = 0.99,
-        copyEach = 200,
+        copyEach = 50,
         referenceNet = neuralNet.as[GraphNeuralNetworkRL]
       )
     language: application/x-scala
@@ -63,12 +67,6 @@ seeds:
 layers:
   - type: CircleLayer
     parameters: [500, 500, 200, 1]
-    molecule: info1
-  - type: CircleLayer
-    parameters: [0, 0, 200, 1 ]
-    molecule: info2
-  - type: CombineAllLayer
-    parameters: [ ]
     molecule: info
 
 environment:
@@ -83,7 +81,7 @@ environment:
 
 network-model:
   type: ConnectWithinDistance
-  parameters: [ *range ]
+  parameters: [ 300 ]
 
 _reactions:
   - program: &program
@@ -93,17 +91,16 @@ _reactions:
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [it.unibo.scafi.ExplorerCollective, 2 ]
+            parameters: [it.unibo.scafi.ExplorerBasic, 2 ]
       - program: send
-
 deployments:
   type: Grid
-  parameters: [0, 0, *width, *width, *spacing, *spacing, *randomness, *randomness, true]
-  programs:
-    - *program
+  parameters: [0, 0, *width, *width, *spacing, *spacing, *randomness, *randomness]
   contents:
     molecule: view
     concentration: 100.0
+  programs:
+    - *program
 export:
   - type: CSVExporter
     parameters:

@@ -18,7 +18,8 @@ class GlobalLearnerDecentralisedAgentCollectiveGNN[T, P <: Position[P]](
     val batchSize: Int,
     val actionSpace: ActionSpace.Space,
     val episodeLength: Int,
-    val box: Box
+    val box: Box,
+    val learn: Boolean
 ) extends AbstractGlobalLearner[T, P, Graph, Graph] {
   override def empty[A]: Graph[A] = null
 
@@ -52,7 +53,7 @@ class GlobalLearnerDecentralisedAgentCollectiveGNN[T, P <: Position[P]](
       actionT: Graph[Int],
       rewardTPlus: Graph[Double],
       stateTPlus: Graph[AgentState]
-  ): Unit = buffer.put(stateT, actionT, rewardTPlus, stateTPlus)
+  ): Unit = if (learn) { buffer.put(stateT, actionT, rewardTPlus, stateTPlus) }
 
   override protected def fromSeq[A](seq: Seq[A]): Graph[A] = Graph(seq, neighborhood(states))
 }

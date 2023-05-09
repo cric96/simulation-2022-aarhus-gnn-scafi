@@ -39,6 +39,9 @@ abstract class AbstractDeepQLearning[F[_], N <: NeuralNetworkRL[F, N]]() extends
   override def load(where: String): Unit = {
     targetNetwork.underlying.load_state_dict(torch.load(where))
     policyNetwork.underlying.load_state_dict(torch.load(where))
+
+    targetNetwork.underlying.eval()
+    policyNetwork.underlying.eval()
   }
 
   override def update(batch: Seq[Experience[F]]): Unit = {

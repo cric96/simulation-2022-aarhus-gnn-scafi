@@ -75,7 +75,7 @@ environment:
         type: DiracComb
         parameters: [ 0.2, 1.0 ]
       type: GlobalLearnerDecentralisedAgentCollective
-      parameters: [*learner, *bufferSize, *batchSize, *actionSpaceEvaluated, *episodeLength, *environmentBox]
+      parameters: [*learner, *bufferSize, *batchSize, *actionSpaceEvaluated, *episodeLength, *environmentBox, true]
 
 network-model:
   type: ConnectWithinDistance

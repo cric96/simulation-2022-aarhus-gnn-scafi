@@ -73,7 +73,7 @@ environment:
         type: DiracComb
         parameters: [ 0.2, 1.0 ]
       type: GlobalLearnerDecentralisedAgentCollectiveGNN
-      parameters: [*learner, *bufferSize, *batchSize, *actionSpaceEvaluated, *episodeLength, *environmentBox]
+      parameters: [*learner, *bufferSize, *batchSize, *actionSpaceEvaluated, *episodeLength, *environmentBox, true]
     - time-distribution:
         type: DiracComb
         parameters: [ 0.2, 2.0 ]

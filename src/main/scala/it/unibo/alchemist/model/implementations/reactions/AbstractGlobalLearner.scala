@@ -28,6 +28,8 @@ trait AbstractGlobalLearner[T, P <: Position[P], BatchF[_], ExperienceF[_]]
 
   def learner: Learner[ExperienceF]
 
+  def learn: Boolean
+
   def bufferSize: Int
 
   def batchSize: Int
@@ -43,6 +45,9 @@ trait AbstractGlobalLearner[T, P <: Position[P], BatchF[_], ExperienceF[_]]
   // SIDE EFFECT!! This method is called by the learner to inject itself into the agent
   learner.injectCentralAgent(this)
 
+  if (!learn) {
+    learner.load(folder + "/" + snapshotName)
+  }
   // Utilities
   protected val randomScala = new ScafiIncarnationForAlchemist.AlchemistRandomWrapper(random)
   protected val buffer = new ArrayReplayBuffer[ExperienceF](bufferSize, randomScala)
@@ -50,6 +55,7 @@ trait AbstractGlobalLearner[T, P <: Position[P], BatchF[_], ExperienceF[_]]
   protected var stateMemory: BatchF[AgentState] = empty
   protected var totalRewardPerEpisode: Double = 0
   private val os = py.module("os")
+  private var simulations = 0
   override protected def executeBeforeUpdateDistribution(): Unit = if (environment.getSimulation.getTime.toDouble > 1) {
     val currentTime = environment.getSimulation.getTime.toDouble
     val currentStates = prepareStates
@@ -60,11 +66,14 @@ trait AbstractGlobalLearner[T, P <: Position[P], BatchF[_], ExperienceF[_]]
     stateMemory = currentStates
     performAction(prepareActionForActing(currentActions))
     if ((currentTime.toInt % episodeLength) == 0) {
+      simulations += 1
       scribe.info("Change environment")
       if (!os.path.exists(folder).as[Boolean]) {
         os.makedirs(folder)
       }
-      learner.store(folder + "/" + snapshotName)
+      if (learn) {
+        learner.store(folder + "/" + snapshotName + "_" + totalRewardPerEpisode.toInt + "_" + currentTime)
+      }
       decayable.foreach(_._2.update())
       decayable.foreach { case (name, reference) =>
         writer.add_scalar(name, reference.value.toString.toDouble, environment.getSimulation.getTime.toDouble.toInt)
@@ -100,13 +109,17 @@ trait AbstractGlobalLearner[T, P <: Position[P], BatchF[_], ExperienceF[_]]
           reward
         }
       // val rewardGraph = Graph(rewards, states.connections)
-      recordExperiences(stateMemory, actionMemory, rewards.batch, states)
+      if (learn) {
+        recordExperiences(stateMemory, actionMemory, rewards.batch, states)
+      }
       partialRewardMap.foreach { case (key, value) =>
         writer.add_scalar(key, value / states.raw.size, environment.getSimulation.getTime.toDouble.toInt)
       }
       writer.add_scalar("Reward", totalReward / states.raw.size, environment.getSimulation.getTime.toDouble.toInt)
-      val sample = buffer.sample(batchSize)
-      if (sample.nonEmpty) learner.update(sample)
+      if (learn) {
+        val sample = buffer.sample(batchSize)
+        if (sample.nonEmpty) learner.update(sample)
+      }
       totalRewardPerEpisode += totalReward
     }
   }
